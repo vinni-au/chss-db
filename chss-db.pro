@@ -8,7 +8,9 @@ SOURCES += main.cpp \
     buffer/buffermanager.cpp \
     global.cpp \
     query/query.cpp \
-    query/queryprocessor.cpp
+    query/queryprocessor.cpp \
+    buffer/record.cpp \
+    buffer/diskmanager.cpp
 
 HEADERS += \
     global.h \
@@ -17,7 +19,9 @@ HEADERS += \
     buffer/buffermanager.hpp \
     query/query.hpp \
     query/queryprocessor.hpp \
-    metadata.h
+    metadata.h \
+    buffer/record.h \
+    buffer/diskmanager.h
 
 OTHER_FILES += \
     buffer/ABOUT \
