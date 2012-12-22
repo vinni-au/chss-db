@@ -52,7 +52,7 @@ private:
     std::vector<Table> tables;
 
 public:
-    DBMetaData(std::string db_name): m_name(db_name), tables(vector<Table>()) {}
+    DBMetaData(std::string db_name): m_name(db_name), tables(std::vector<Table>()) {}
 
     std::string const& get_name() const {
         return m_name;
@@ -67,7 +67,7 @@ public:
     }
 
     void add_table(Table const &table) {
-        return table;
+        tables.push_back(table);
     }
 };
 
