@@ -39,6 +39,10 @@ public:
         assert(len>0);
     }
 
+    DBDataType() {
+        m_type = -1;
+    }
+
     int get_type() const {
         return m_type;
     }
@@ -53,9 +57,14 @@ public:
         return m_len;
     }
 
-    void print(std::ofstream const &out) {
+    void print(std::ofstream &out) const {
         out.write((char*)(&m_type), sizeof(int));
         out.write((char*)(&m_len), sizeof(int));
+    }
+
+    void read(std::ifstream &in) {
+        in.read((char*)(&m_type), sizeof(int));
+        in.read((char*)(&m_len), sizeof(int));
     }
 
 };

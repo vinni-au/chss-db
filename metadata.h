@@ -12,7 +12,7 @@ private:
     std::string m_name;
 public:
     Column(DBDataType type, std::string name): m_type(type), m_name(name) { }
-
+    Column() { }
     DBDataType get_type() const {
         return m_type;
     }
@@ -25,6 +25,16 @@ public:
         m_type.print(out);
         out.write(m_name.c_str(), m_name.length());
     }
+
+    void read(std::ifstream &in) {
+        in.read((char*)(&m_type), sizeof(int));
+        int t;
+        in.read((char*)(&t), sizeof(int));
+        char *buf = new char[t];
+        in.read(buf, t);
+        m_name = std::string(buf);
+        delete[] buf;
+    }
 };
 
 struct Table {
@@ -33,7 +43,7 @@ private:
     std::vector<Column> m_columns;
 public:
     Table(std::string name): m_name(name), m_columns(std::vector<Column>()) {}
-
+    Table() {}
     std::string const &get_name() const {
         return m_name;
     }
@@ -50,7 +60,7 @@ public:
         m_columns.push_back(column);
     }
 
-    void print(std::ofstream const &out) const {
+    void print(std::ofstream &out) const {
         out.write(m_name.c_str(), m_name.length());
         int t = m_name.length();
         out.write((char*)&t, sizeof(int));
@@ -58,39 +68,67 @@ public:
             m_columns[i].print(out);
         }
     }
+
+    void read(std::ifstream &in) {
+        int t;
+        in.read((char*)(&t), sizeof(int));
+        char *buf = new char[t];
+        in.read(buf, t);
+        m_name = std::string(buf);
+        in.read((char*)(&t), sizeof(int));
+        m_columns = std::vector<Column>(t);
+        for(int i=0; i<t; ++i)
+            m_columns[i].read(in);
+        delete []buf;
+    }
 };
 
 struct DBMetaData {
 private:
     std::string m_name;
-    std::vector<Table> tables;
+    std::vector<Table> m_tables;
 
 public:
-    DBMetaData(std::string db_name): m_name(db_name), tables(std::vector<Table>()) {}
+    DBMetaData(std::string db_name): m_name(db_name), m_tables(std::vector<Table>()) {}
 
     std::string const& get_name() const {
         return m_name;
     }
 
     int get_tables_count() const {
-        return (int)tables.size();
+        return (int)m_tables.size();
     }
 
     Table &get_table(int idx) {
-        return tables[idx];
+        return m_tables[idx];
     }
 
     void add_table(Table const &table) {
-        tables.push_back(table);
+        m_tables.push_back(table);
     }
 
     void print(std::ofstream &out) const {
-        out.write(m_name.c_str(), m_name.length());
-        int t = tables.size();
+        int t = m_name.length();
         out.write((char*)(&t), sizeof(int));
-        for(int i=0; i<(int)tables.size(); ++i) {
-            tables[i].print(out);
+        out.write(m_name.c_str(), m_name.length());
+        t = m_tables.size();
+        out.write((char*)(&t), sizeof(int));
+        for(int i=0; i<(int)m_tables.size(); ++i) {
+            m_tables[i].print(out);
         }
+    }
+
+    void read(std::ifstream &in) {
+        int t;
+        in.read((char*)(&t), sizeof(int));
+        char *buf = new char[t];
+        in.read(buf, t);
+        m_name = std::string(buf);
+        in.read((char*)(&t), sizeof(int));
+        m_tables = std::vector<Table>(t);
+        for(int i=0; i<t; ++i)
+            m_tables[i].read(in);
+        delete []buf;
     }
 };
 
