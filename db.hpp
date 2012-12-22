@@ -5,7 +5,7 @@
 #include "global.h"
 
 struct QueryProcessor;
-struct BufferManager;
+class BufferManager;
 
 struct DB
 {
