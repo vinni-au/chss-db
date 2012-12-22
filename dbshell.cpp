@@ -22,7 +22,7 @@ void DBShell::run()
 
             }
         } else {
-            postError("DBShell", "It seems to be wrong query");
+//            postError("DBShell", "It seems to be wrong query");
         }
     }
 }
