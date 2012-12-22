@@ -17,7 +17,8 @@ typedef short           int16;      /* 16 bit signed */
 typedef unsigned short  uint16;     /* 16 bit unsigned */
 typedef int             int32;      /* 32 bit signed */
 typedef unsigned int    uint32;     /* 32 bit unsigned */
-typedef long long       PageId;
+
+typedef unsigned long long       pageid_t;
 
 enum DBDataType {
     VARCHAR = 0x80,
@@ -26,7 +27,7 @@ enum DBDataType {
 };
 
 struct RID {
-    PageId pid;
+    pageid_t pid;
     int slotNo;
 };
 
