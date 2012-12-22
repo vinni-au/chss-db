@@ -29,6 +29,7 @@ enum DBDataType {
 struct RID {
     pageid_t pid;
     int slotNo;
+    DBDataType type;
 };
 
 struct IDataReader {
