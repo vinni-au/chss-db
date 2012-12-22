@@ -2,20 +2,28 @@
 #define BUFFERMANAGER_HPP
 
 #include "../global.h"
-#include <algorithm>
-struct DB;
+#include "diskmanager.h"
+#include <string>
+#include <map>
 
-struct BufferManager
+class BufferManager
 {
-    BufferManager(DB* db);
-
-    void setPagesInMemory(uint32 pages) {
-        m_pages = std::min((uint32)MIN_PAGES_IN_MEMORY, pages);
-    }
-
+public:
+    BufferManager(std::string dbfilename, uint32 pages);
+    ~BufferManager();
+    uint32 read(uint32 page, uint32 offset, char* buffer, uint32 size);
+    uint32 write(uint32 page, uint32 offset, char* buffer, uint32 size);
 private:
-    DB* m_db;
+    uint32 get_address(uint32 page);
+private:
     uint32 m_pages;
+    char* m_buffer;
+    DiskManager* m_disk_manager;
+    uint32 max_priority;
+    std::map<uint32, uint32> m_addr_to_page;
+    std::map<uint32, uint32> m_page_to_addr;
+    std::map<uint32, uint32> m_priority;
+    std::map<uint32, uint32> m_queue;
 };
 
 #include "../db.hpp"
