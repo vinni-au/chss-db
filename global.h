@@ -13,12 +13,14 @@
 int const PAGESIZE = 4096;
 int const MIN_PAGES_IN_MEMORY = 32;
 
-typedef signed char     int8;       /* 8 bit signed */
-typedef unsigned char   uint8;      /* 8 bit unsigned */
-typedef short           int16;      /* 16 bit signed */
-typedef unsigned short  uint16;     /* 16 bit unsigned */
-typedef int             int32;      /* 32 bit signed */
-typedef unsigned int    uint32;     /* 32 bit unsigned */
+typedef signed char         int8;       /* 8 bit signed */
+typedef unsigned char       uint8;      /* 8 bit unsigned */
+typedef short               int16;      /* 16 bit signed */
+typedef unsigned short      uint16;     /* 16 bit unsigned */
+typedef int                 int32;      /* 32 bit signed */
+typedef unsigned int        uint32;     /* 32 bit unsigned */
+typedef long long           int64;      /* 64 bit signed */
+typedef unsigned long long  int64;      /* 64 bit signed */
 
 typedef unsigned long long       pageid_t;
 
