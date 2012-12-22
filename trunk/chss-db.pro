@@ -16,7 +16,8 @@ HEADERS += \
     db.hpp \
     buffer/buffermanager.hpp \
     query/query.hpp \
-    query/queryprocessor.hpp
+    query/queryprocessor.hpp \
+    metadata.h
 
 OTHER_FILES += \
     buffer/ABOUT \

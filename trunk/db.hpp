@@ -20,6 +20,7 @@ struct DB
 private:
     BufferManager* m_buffer;
     QueryProcessor* m_queryProcessor;
+    std::string m_name;
 };
 
 #include "query/queryprocessor.hpp"
