@@ -16,6 +16,9 @@ struct Query
 
     static Query* parse(std::string query);
 
+    QueryType type() const
+    {   return m_type;  }
+
 protected:
     QueryType m_type;
 };
