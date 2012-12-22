@@ -8,6 +8,7 @@
 #include <vector>
 #include <string>
 #include <cassert>
+#include <fstream>
 
 int const PAGESIZE = 4096;
 int const MIN_PAGES_IN_MEMORY = 32;
@@ -50,6 +51,11 @@ public:
             return sizeof(double);
         }
         return m_len;
+    }
+
+    void print(std::ofstream const &out) {
+        out.write((char*)(&m_type), sizeof(int));
+        out.write((char*)(&m_len), sizeof(int));
     }
 
 };

@@ -4,7 +4,7 @@
 #include "global.h"
 #include <string>
 #include <vector>
-
+#include <fstream>
 
 struct Column {
 private:
@@ -19,6 +19,11 @@ public:
 
     std::string get_name() const {
         return m_name;
+    }
+
+    void print(std::ofstream &out) const {
+        m_type.print(out);
+        out.write(m_name.c_str(), m_name.length());
     }
 };
 
@@ -44,6 +49,15 @@ public:
     void add_column(Column const &column) {
         m_columns.push_back(column);
     }
+
+    void print(std::ofstream const &out) const {
+        out.write(m_name.c_str(), m_name.length());
+        int t = m_name.length();
+        out.write((char*)&t, sizeof(int));
+        for(int i=0; i<(int)m_columns.size(); ++i) {
+            m_columns[i].print(out);
+        }
+    }
 };
 
 struct DBMetaData {
@@ -68,6 +82,15 @@ public:
 
     void add_table(Table const &table) {
         tables.push_back(table);
+    }
+
+    void print(std::ofstream &out) const {
+        out.write(m_name.c_str(), m_name.length());
+        int t = tables.size();
+        out.write((char*)(&t), sizeof(int));
+        for(int i=0; i<(int)tables.size(); ++i) {
+            tables[i].print(out);
+        }
     }
 };
 
