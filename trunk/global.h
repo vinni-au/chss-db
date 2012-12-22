@@ -20,7 +20,7 @@ typedef unsigned short      uint16;     /* 16 bit unsigned */
 typedef int                 int32;      /* 32 bit signed */
 typedef unsigned int        uint32;     /* 32 bit unsigned */
 typedef long long           int64;      /* 64 bit signed */
-typedef unsigned long long  int64;      /* 64 bit signed */
+typedef unsigned long long  uint64;      /* 64 bit signed */
 
 typedef unsigned long long       pageid_t;
 
