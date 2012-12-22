@@ -29,7 +29,7 @@ struct CreateQuery : Query
 
 protected:
     std::string m_tablename;
-    std::vector<std::string, int> m_columns;
+    std::vector<std::pair<std::string, int> > m_columns;
 };
 
 #endif // QUERY_HPP
