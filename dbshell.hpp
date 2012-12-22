@@ -2,6 +2,7 @@
 #define DBSHELL_HPP
 
 #include "db.hpp"
+#include "query/query.hpp"
 
 struct DBShell
 {

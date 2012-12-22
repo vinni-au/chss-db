@@ -5,6 +5,8 @@
 #define _GLOBAL_H_
 
 #include <iostream>
+#include <vector>
+#include <string>
 
 #define PAGESIZE            4096
 #define MIN_PAGES_IN_MEMORY 32
@@ -15,10 +17,25 @@ typedef short           int16;      /* 16 bit signed */
 typedef unsigned short  uint16;     /* 16 bit unsigned */
 typedef int             int32;      /* 32 bit signed */
 typedef unsigned int    uint32;     /* 32 bit unsigned */
+typedef long long       PageId;
 
-inline void postError(const char* who, const char* message)
-{
-    std::cout << "ERROR in " << who << ": " << message << std::endl;
-}
+enum DBDataType {
+    VARCHAR = 0x80,
+    INT = 0x100,
+    DOUBLE = 0x200
+};
+
+struct RID {
+    PageId pid;
+    int slotNo;
+};
+
+struct IDataReader {
+    virtual bool hasNext() = 0;
+    virtual std::vector<std::pair<std::string, DBDataType> > getSchema() = 0;
+    virtual std::vector<std::pair<DBDataType, void*> > getTuple() = 0;
+};
+
+extern inline void postError(const char* who, const char* message);
 
 #endif //_GLOBAL_H_

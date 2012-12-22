@@ -3,7 +3,9 @@
 
 #include <iostream>
 #include "global.h"
-#include "buffer/buffermanager.hpp"
+
+struct QueryProcessor;
+struct BufferManager;
 
 struct DB
 {
@@ -12,8 +14,15 @@ struct DB
     BufferManager* buffer() const
     {   return m_buffer;    }
 
+    QueryProcessor* queryProcessor() const
+    {   return m_queryProcessor; }
+
 private:
     BufferManager* m_buffer;
+    QueryProcessor* m_queryProcessor;
 };
+
+#include "query/queryprocessor.hpp"
+#include "buffer/buffermanager.hpp"
 
 #endif // DB_HPP
