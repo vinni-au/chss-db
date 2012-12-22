@@ -2,7 +2,7 @@
 #define BUFFERMANAGER_HPP
 
 #include "../global.h"
-
+#include <algorithm>
 struct DB;
 
 struct BufferManager
@@ -10,7 +10,7 @@ struct BufferManager
     BufferManager(DB* db);
 
     void setPagesInMemory(uint32 pages) {
-        m_pages = pages < MIN_PAGES_IN_MEMORY ? MIN_PAGES_IN_MEMORY : pages;
+        m_pages = std::min((uint32)MIN_PAGES_IN_MEMORY, pages);
     }
 
 private:
