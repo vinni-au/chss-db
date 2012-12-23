@@ -21,6 +21,7 @@ struct Query
 
 protected:
     QueryType m_type;
+
 };
 
 struct CreateQuery : Query
@@ -30,9 +31,16 @@ struct CreateQuery : Query
         m_type = Q_Create;
     }
 
+    const std::string& tablename() const
+    {   return m_tablename; }
+
+    const std::vector<std::pair<std::string, int> >& columns() const
+    {   return m_columns;   }
+
 protected:
     std::string m_tablename;
     std::vector<std::pair<std::string, int> > m_columns;
+
 };
 
 #endif // QUERY_HPP

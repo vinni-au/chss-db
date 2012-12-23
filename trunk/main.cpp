@@ -17,7 +17,6 @@ int main(int argc, char* argv[])
         std::string filename(argv[1]);
         int pages = atoi(argv[2]);
         DB* db = new DB(filename);
-        db->buffer()->setPagesInMemory(pages);
         DBShell* shell = new DBShell(db);
         shell->run();
         delete db;

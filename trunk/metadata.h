@@ -6,6 +6,7 @@
 #include <vector>
 #include <fstream>
 
+
 struct Column {
 private:
     DBDataType m_type;
