@@ -5,8 +5,7 @@
 
 BufferManager::BufferManager(std::string dbfilename, uint32 pages)
     : m_pages(std::max(pages, (uint32)MIN_PAGES_IN_MEMORY)), m_buffer(new char[PAGESIZE * m_pages]),
-      m_disk_manager(new DiskManager(dbfilename)), max_priority(0)
-{
+      m_disk_manager(new DiskManager(dbfilename)), max_priority(0) {
     memset(m_buffer, 0, m_pages * PAGESIZE);
     for(size_t i = 0; i != m_pages; ++i) {
         m_queue[++max_priority] = i;

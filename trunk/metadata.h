@@ -86,15 +86,10 @@ public:
 
 struct DBMetaData {
 private:
-    std::string m_name;
     std::vector<Table> m_tables;
 
 public:
-    DBMetaData(std::string db_name): m_name(db_name), m_tables(std::vector<Table>()) {}
-
-    std::string const& get_name() const {
-        return m_name;
-    }
+    DBMetaData(): m_tables(std::vector<Table>()) {}
 
     int get_tables_count() const {
         return (int)m_tables.size();
@@ -109,10 +104,7 @@ public:
     }
 
     void print(std::ofstream &out) const {
-        int t = m_name.length();
-        out.write((char*)(&t), sizeof(int));
-        out.write(m_name.c_str(), m_name.length());
-        t = m_tables.size();
+        int t = m_tables.size();
         out.write((char*)(&t), sizeof(int));
         for(int i=0; i<(int)m_tables.size(); ++i) {
             m_tables[i].print(out);
@@ -122,17 +114,11 @@ public:
     void read(std::ifstream &in) {
         int t;
         in.read((char*)(&t), sizeof(int));
-        char *buf = new char[t];
-        in.read(buf, t);
-        m_name = std::string(buf);
-        in.read((char*)(&t), sizeof(int));
         m_tables = std::vector<Table>(t);
         for(int i=0; i<t; ++i)
             m_tables[i].read(in);
-        delete []buf;
     }
 };
-
 
 
 #endif // METADATA_H

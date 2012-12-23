@@ -6,8 +6,7 @@ DBShell::DBShell(DB *db) :
 {
 }
 
-void DBShell::run()
-{
+void DBShell::run() {
     while (true) {
         std::string query;
         std::string cur;

@@ -9,33 +9,32 @@ enum QueryType {
     Q_Select
 };
 
-struct Query
-{
-    Query() : m_type(Q_Query)
-    {}
+struct Query {
+    Query() : m_type(Q_Query) {}
 
-    static Query* parse(std::string query);
+    static Query* parse(std::string const &query);
 
-    QueryType type() const
-    {   return m_type;  }
+    QueryType type() const {
+        return m_type;
+    }
 
 protected:
     QueryType m_type;
 
 };
 
-struct CreateQuery : Query
-{
-    CreateQuery()
-    {
+struct CreateQuery : Query {
+    CreateQuery() {
         m_type = Q_Create;
     }
 
-    const std::string& tablename() const
-    {   return m_tablename; }
+    const std::string& tablename() const {
+        return m_tablename;
+    }
 
-    const std::vector<std::pair<std::string, int> >& columns() const
-    {   return m_columns;   }
+    const std::vector<std::pair<std::string, int> >& columns() const {
+        return m_columns;
+    }
 
 protected:
     std::string m_tablename;

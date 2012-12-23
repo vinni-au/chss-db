@@ -9,6 +9,7 @@
 #include <string>
 #include <cassert>
 #include <fstream>
+#include <cstdlib>
 
 int const PAGESIZE = 4096;
 int const MIN_PAGES_IN_MEMORY = 32;
@@ -67,6 +68,24 @@ public:
     void read(std::ifstream &in) {
         in.read((char*)(&m_type), sizeof(int));
         in.read((char*)(&m_len), sizeof(int));
+    }
+
+    static DBDataType construct(std::string const &type) {
+        int _type;
+        int _len = 0;
+        if (type.substr(0, 3)=="int") {
+            _type = INT;
+        } else if (type.substr(0, 6)=="double") {
+            _type = DOUBLE;
+        } else {
+            _type = VARCHAR;
+            std::string t = type;
+            t = t.substr(7);
+            t = t.substr(1);
+            t = t.substr(0, t.length()-1);
+            _len = atoi(t.c_str());
+        }
+        return DBDataType(_type, _len);
     }
 
 };
