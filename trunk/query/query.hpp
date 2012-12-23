@@ -10,7 +10,7 @@ enum QueryType {
 };
 
 struct Query {
-    Query() : m_type(Q_Query) {}
+    Query() : m_type(Q_Query) { }
 
     static Query* parse(std::string const &query);
 
@@ -23,7 +23,8 @@ protected:
 
 };
 
-struct CreateQuery : Query {
+struct CreateQuery : Query
+{
     CreateQuery() {
         m_type = Q_Create;
     }
@@ -39,7 +40,6 @@ struct CreateQuery : Query {
 protected:
     std::string m_tablename;
     std::vector<std::pair<std::string, int> > m_columns;
-
 };
 
 #endif // QUERY_HPP
