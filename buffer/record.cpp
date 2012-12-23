@@ -22,5 +22,7 @@ double Record::getDouble(uint32 pos) {
 }
 
 std::string Record::getVarchar(uint32 pos) {
-
+    uint32 offset = m_signature->get_offset(pos);
+    uint32 size = m_signature->get_field_type(pos).get_size();
+    return std::string(m_data + offset, m_data + offset + size);
 }
