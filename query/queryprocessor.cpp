@@ -15,6 +15,8 @@ IDataReader* QueryProcessor::runQuery(Query *query)
             std::pair<std::string, int> cur = q->columns()[i];
             t.add_column(Column(cur.second, cur.first));
         }
+    } else if (query->type() == Q_Select) {
+
     }
     return 0;
 }
