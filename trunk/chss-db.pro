@@ -11,7 +11,9 @@ SOURCES += main.cpp \
     query/queryprocessor.cpp \
     buffer/record.cpp \
     buffer/diskmanager.cpp \
-    messagedatareader.cpp
+    messagedatareader.cpp \
+    buffer/signature.cpp \
+    buffer/heapfile.cpp
 
 HEADERS += \
     global.h \
@@ -23,7 +25,10 @@ HEADERS += \
     metadata.h \
     buffer/record.h \
     buffer/diskmanager.h \
-    messagedatareader.hpp
+    messagedatareader.hpp \
+    buffer/buffermanager.h \
+    buffer/signature.h \
+    buffer/heapfile.h
 
 OTHER_FILES += \
     buffer/ABOUT \
