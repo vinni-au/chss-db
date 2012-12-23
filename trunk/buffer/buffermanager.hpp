@@ -15,6 +15,8 @@ public:
     uint32 write(uint32 page, uint32 offset, char* buffer, uint32 size);
 private:
     uint32 get_address(uint32 page);
+    void read_page(uint32 page, uint32 address);
+    void write_page(uint32 page, uint32 address);
 private:
     uint32 m_pages;
     char* m_buffer;
