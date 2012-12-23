@@ -13,4 +13,3 @@ Record HeapFile::get(uint32 index) {
 
 void HeapFile::add(Record const& r) {
 }
-

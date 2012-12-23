@@ -5,13 +5,12 @@
 
 struct Signature {
 public:
-    Signature(char* str, uint32 size);
-    char getField(uint32 pos);
-    bool isInt(uint32 pos);
-    bool isDouble(uint32 pos);
-    bool isVarchar(uint32 pos);
+    Signature(DBDataType* types, uint32 size);
+    DBDataType get_field_type(uint32 pos);
+    uint32 get_offset(uint32 pos);
 private:
-    std::vector<char> m_fields;
+    DBDataType* m_fields;
+    uint32* m_offsets;
 };
 
 #endif // SIGNATURE_H
