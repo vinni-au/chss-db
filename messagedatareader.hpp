@@ -27,7 +27,7 @@ public:
     std::vector<std::pair<DBDataType, void*> > getTuple() {
         std::vector<std::pair<DBDataType, void*> > v;
         if (ololo) {
-            auto p = std::pair<DBDataType, void*>(DBDataType::VARCHAR, (void*)msg.c_str());
+            std::pair<DBDataType, void*> p = std::pair<DBDataType, void*>(DBDataType::VARCHAR, (void*)msg.c_str());
             v.push_back(p);
             return v;
         }

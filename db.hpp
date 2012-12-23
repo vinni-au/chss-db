@@ -11,11 +11,13 @@ struct DB
 {
     DB(std::string dbname);
 
-    BufferManager* buffer() const
-    {   return m_buffer;    }
+    BufferManager* buffer() const {
+        return m_buffer;
+    }
 
-    QueryProcessor* queryProcessor() const
-    {   return m_queryProcessor; }
+    QueryProcessor* queryProcessor() const {
+        return m_queryProcessor;
+    }
 
 private:
     BufferManager* m_buffer;
