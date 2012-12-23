@@ -7,9 +7,6 @@
 #include <string>
 #include <map>
 
-#define forn(i, n) for(int i = 0; i < n; ++i)
-#define make_pair mp
-
 struct BufferManager {
 public:
     BufferManager(DB* db, uint32 pages);

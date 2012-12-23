@@ -1,23 +1,18 @@
 #include "signature.h"
 
-Signature::Signature(char* str, uint32 size) {
+Signature::Signature(DBDataType* types, uint32 size) {
+    uint32 current_offset = 0;
     for(uint32 i = 0; i != size; ++i) {
-        m_fields[i] = str[i];
+        m_fields[i] = types[i];
+        m_offsets[i] = current_offset;
+        current_offset += types[i].get_size();
     }
 }
 
-
-char Signature::getField(uint32 pos) {
+DBDataType Signature::get_field_type(uint32 pos) {
     return m_fields[pos];
 }
 
-bool Signature::isInt(uint32 pos) {
-}
-
-bool Signature::isDouble(uint32 pos) {
-
-}
-
-bool Signature::isVarchar(uint32 pos) {
-
+uint32 Signature::get_offset(uint32 pos) {
+    return m_offsets[pos];
 }
