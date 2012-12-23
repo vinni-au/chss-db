@@ -1,6 +1,6 @@
 #ifndef SIGNATURE_H
 #define SIGNATURE_H
-#include "global.h"
+#include "../global.h"
 #include <vector>
 #include <string>
 

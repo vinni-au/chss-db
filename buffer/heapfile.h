@@ -1,6 +1,6 @@
 #ifndef HEAPFILE_H
 #define HEAPFILE_H
-#include "global.h"
+#include "../global.h"
 #include "buffermanager.h"
 #include "record.h"
 

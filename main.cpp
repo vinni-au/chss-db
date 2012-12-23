@@ -7,16 +7,17 @@
 #include <cstdlib>
 #include "db.hpp"
 #include "dbshell.hpp"
- 
+
+
 int main(int argc, char* argv[])
 {
     if (argc != 3) {
-        std::cout << "usage: chss-db <filename> <pages in memory>" << std::endl;
+        std::cout << "usage: chss-db <dir> <pages in memory>" << std::endl;
         return 0;
     } else {
-        std::string filename(argv[1]);
+        std::string dirname(argv[1]);
         int pages = atoi(argv[2]);
-        DB* db = new DB(filename);
+        DB* db = new DB(dirname);
         DBShell* shell = new DBShell(db);
         shell->run();
         delete db;

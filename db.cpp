@@ -1,9 +1,9 @@
 #include "db.hpp"
 #include "metadata.h"
 
-DB::DB(std::string dbname)
+DB::DB(std::string dir)
     : m_buffer(0),
       m_queryProcessor(new QueryProcessor(this)),
-      m_name(dbname)
+      m_dir(dir)
 {
 }

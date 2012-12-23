@@ -9,7 +9,7 @@ class BufferManager;
 
 struct DB
 {
-    DB(std::string dbname);
+    DB(std::string dir);
 
     BufferManager* buffer() const {
         return m_buffer;
@@ -22,10 +22,10 @@ struct DB
 private:
     BufferManager* m_buffer;
     QueryProcessor* m_queryProcessor;
-    std::string m_name;
+    std::string m_dir;
 };
 
 #include "query/queryprocessor.hpp"
-#include "buffer/buffermanager.hpp"
+#include "buffer/buffermanager.h"
 
 #endif // DB_HPP
