@@ -1,5 +1,5 @@
-#ifndef BUFFERMANAGER_HPP
-#define BUFFERMANAGER_HPP
+#ifndef BUFFERMANAGER_H
+#define BUFFERMANAGER_H
 
 #include "../global.h"
 #include "../db.hpp"
@@ -14,20 +14,18 @@ public:
     uint32 read(uint32 table_id, uint32 offset, char* buffer, uint32 size);
     uint32 write(uint32 table_id, uint32 offset, char* buffer, uint32 size);
 private:
-    uint32 get_address(uint32 page);
-    void read_page(uint32 page, uint32 address);
-    void write_page(uint32 page, uint32 address);
+    uint32 get_address(uint32 table_id, uint32 page);
+    void read_page(uint32 table_id, uint32 page, uint32 address);
+    void write_page(uint32 table_id, uint32 page, uint32 address);
 
 private:
     DB* m_db;
     uint32 m_pages;
     char* m_buffer;
     uint32 max_priority;
-    std::map<uint32, DiskManager*> tableid;
-    std::map<std::string, DiskManager*> m_disk_managers;
-//    std::map<std::pair<std::string, uint32>, uint32>;
-    std::map<uint32, uint32> m_addr_to_page;
-    std::map<uint32, uint32> m_page_to_addr;
+    std::map<uint32, DiskManager*> m_disk_managers;
+    std::map<uint32, std::pair<uint32, uint32> > m_addr_to_page;
+    std::map<std::pair<uint32, uint32>, uint32> m_page_to_addr;
     std::map<uint32, uint32> m_priority;
     std::map<uint32, uint32> m_queue;
 };

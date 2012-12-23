@@ -13,14 +13,14 @@ BufferManager::BufferManager(DB* db, uint32 pages) : m_db(db), m_pages(std::max(
 
 BufferManager::~BufferManager() {
     for(size_t i = 0; i != m_pages; ++i) if(m_addr_to_page.count(i)) {
-        write_page(m_addr_to_page[i], i);
+        write_page(m_addr_to_page[i].first, m_addr_to_page[i].second, i);
     }
     delete[] m_buffer;
 }
 
 uint32 BufferManager::read(uint32 table_id, uint32 offset, char* buffer, uint32 size) {
     uint32 page = offset / PAGESIZE;
-    uint32 addr = get_address(page);
+    uint32 addr = get_address(table_id, page);
     size = std::min(size, PAGESIZE - offset);
     memcpy(buffer, m_buffer + addr * PAGESIZE + offset, size);
     return size;
@@ -28,27 +28,27 @@ uint32 BufferManager::read(uint32 table_id, uint32 offset, char* buffer, uint32 
 
 uint32 BufferManager::write(uint32 table_id, uint32 offset, char* buffer, uint32 size) {
     uint32 page = offset / PAGESIZE;
-    uint32 addr = get_address(page);
+    uint32 addr = get_address(table_id, page);
     size = std::min(size, PAGESIZE - offset);
     memcpy(m_buffer + addr * PAGESIZE + offset, buffer, size);
     return size;
 }
 
-uint32 BufferManager::get_address(uint32 page) {
-    if(!m_page_to_addr.count(page)) {
+uint32 BufferManager::get_address(uint32 table_id, uint32 page) {
+    if(!m_page_to_addr.count(std::make_pair(table_id, page))) {
         std::map<uint32, uint32>::iterator sit = m_queue.begin();
         uint32 addr = sit->second;
         m_queue.erase(sit);
         if(m_addr_to_page.count(addr)) {
-            write_page(m_addr_to_page[addr], addr);
-            uint32 oldpage = m_addr_to_page[addr];
-            m_page_to_addr.erase(oldpage);
+            std::pair<uint32, uint32> tablepage = m_addr_to_page[addr];
+            write_page(tablepage.first, tablepage.second, addr);
+            m_page_to_addr.erase(tablepage);
         }
-        m_page_to_addr[page] = addr;
-        m_addr_to_page[addr] = page;
-        read_page(page, addr);
+        m_page_to_addr[std::make_pair(table_id, page)] = addr;
+        m_addr_to_page[addr] = std::make_pair(table_id, page);
+        read_page(table_id, page, addr);
     }
-    uint32 addr = m_page_to_addr[page];
+    uint32 addr = m_page_to_addr[std::make_pair(table_id, page)];
     m_queue.erase(m_priority[addr]);
     m_priority[addr] = ++max_priority;
     m_queue[max_priority] = addr;
@@ -56,10 +56,14 @@ uint32 BufferManager::get_address(uint32 page) {
 }
 
 
-void BufferManager::read_page(uint32 page, uint32 address) {
-//    m_disk_manager->read(m_buffer + PAGESIZE * address, PAGESIZE, PAGESIZE * page);
+void BufferManager::read_page(uint32 table_id, uint32 page, uint32 address) {
+    if(m_disk_managers.count(table_id)) {
+        m_disk_managers[table_id] = new DiskManager(int_to_string(table_id));
+    }
+    DiskManager *diskmanager = m_disk_managers[table_id];
+    diskmanager->read(m_buffer + PAGESIZE * address, PAGESIZE, PAGESIZE * page);
 }
 
-void BufferManager::write_page(uint32 page, uint32 address) {
+void BufferManager::write_page(uint32 table_id, uint32 page, uint32 address) {
 //    m_disk_manager->write(m_buffer + PAGESIZE * address, PAGESIZE, PAGESIZE * page);
 }
