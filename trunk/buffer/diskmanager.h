@@ -1,6 +1,6 @@
 #ifndef DISKMANAGER_H
 #define DISKMANAGER_H
-#include "global.h"
+#include "../global.h"
 #include <string>
 #include <cstdio>
 #include <cstdlib>

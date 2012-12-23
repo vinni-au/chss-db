@@ -19,7 +19,7 @@ HEADERS += \
     global.h \
     dbshell.hpp \
     db.hpp \
-    buffer/buffermanager.hpp \
+    buffer/buffermanager.h \
     query/query.hpp \
     query/queryprocessor.hpp \
     metadata.h \

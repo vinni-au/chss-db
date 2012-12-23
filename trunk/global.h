@@ -96,10 +96,13 @@ struct RID {
     DBDataType type;
 };
 
+struct Signature;
+struct Record;
+
 struct IDataReader {
     virtual bool hasNext() = 0;
-    virtual std::vector<std::pair<std::string, DBDataType> > getSchema() = 0;
-    virtual std::vector<std::pair<DBDataType, void*> > getTuple() = 0;
+    virtual Signature& getSchema() = 0;
+    virtual Record& getTuple() = 0;
 };
 
 extern inline void postError(const char* who, const char* message);
