@@ -10,3 +10,7 @@ std::string int_to_string(int value) {
     ss << value;
     return ss.str();
 }
+
+std::string get_dbfilename(int table_id) {
+    return "table" + int_to_string(table_id) + ".db";
+}
