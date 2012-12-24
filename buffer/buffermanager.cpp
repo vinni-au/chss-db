@@ -55,15 +55,19 @@ uint32 BufferManager::get_address(uint32 table_id, uint32 page) {
     return addr;
 }
 
+DiskManager* BufferManager::get_disk_manager(uint32 table_id) {
+    if(m_disk_managers.count(table_id)) {
+        return m_disk_managers[table_id] = new DiskManager(get_dbfilename(table_id));
+    }
+    return m_disk_managers[table_id];
+}
 
 void BufferManager::read_page(uint32 table_id, uint32 page, uint32 address) {
-    if(m_disk_managers.count(table_id)) {
-        m_disk_managers[table_id] = new DiskManager(int_to_string(table_id));
-    }
-    DiskManager *diskmanager = m_disk_managers[table_id];
+    DiskManager *diskmanager = get_disk_manager(table_id);
     diskmanager->read(m_buffer + PAGESIZE * address, PAGESIZE, PAGESIZE * page);
 }
 
 void BufferManager::write_page(uint32 table_id, uint32 page, uint32 address) {
-//    m_disk_manager->write(m_buffer + PAGESIZE * address, PAGESIZE, PAGESIZE * page);
+    DiskManager *diskmanager = get_disk_manager(table_id);
+    diskmanager->write(m_buffer + PAGESIZE * address, PAGESIZE, PAGESIZE * page);
 }
