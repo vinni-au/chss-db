@@ -8,10 +8,14 @@ Signature::Signature(std::vector<std::string> names, std::vector<DBDataType> typ
     }
 }
 
-DBDataType Signature::get_field_type(uint32 pos) {
+DBDataType Signature::get_field_type(uint32 pos) const {
     return m_fields[pos];
 }
 
-uint32 Signature::get_offset(uint32 pos) {
+uint32 Signature::get_offset(uint32 pos) const {
     return m_offsets[pos];
+}
+
+uint32 Signature::get_size_in_bytes() const {
+    return m_bytes_size;
 }

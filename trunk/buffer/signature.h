@@ -7,8 +7,9 @@
 struct Signature {
 public:
     Signature(std::vector<std::string> names, std::vector<DBDataType> types);
-    DBDataType get_field_type(uint32 pos);
-    uint32 get_offset(uint32 pos);
+    DBDataType get_field_type(uint32 pos) const;
+    uint32 get_offset(uint32 pos) const;
+    uint32 get_size_in_bytes() const;
 private:
     uint32 m_bytes_size;
     std::vector<std::string> m_field_names;
