@@ -6,7 +6,7 @@ DB::DB(std::string dir)
       m_queryProcessor(new QueryProcessor(this)),
       m_dir(dir)
 {
-    if (m_dir.back() != '/')
+    if (m_dir.at(m_dir.length() - 1) != '/')
         m_dir.append("/");
 
     //read metadata
