@@ -26,17 +26,14 @@ protected:
 
 struct CreateQuery : Query
 {
-    CreateQuery() {
-        m_type = Create;
-    }
+    CreateQuery()
+    {   m_type = Create;    }
 
-    const std::string& tablename() const {
-        return m_tablename;
-    }
+    const std::string& tablename() const
+    {   return m_tablename; }
 
-    const std::vector<std::pair<std::string, DBDataType> >& columns() const {
-        return m_columns;
-    }
+    const std::vector<std::pair<std::string, DBDataType> >& columns() const
+    {   return m_columns;   }
 
 protected:
     std::string m_tablename;
@@ -47,17 +44,17 @@ protected:
 
 struct InsertQuery : Query
 {
-    InsertQuery() {
-        m_type = Insert;
-    }
+    InsertQuery()
+    {   m_type = Insert;    }
 
-    const std::string& tablename() const {
-        return m_tablename;
-    }
+    const std::string& tablename() const
+    {   return m_tablename; }
 
 protected:
     std::string m_tablename;
-    std::vector<std::pair<DBDataType, void*> > m_values;
+    std::vector<std::pair<std::string, DBDataValue> > m_values;
+
+    friend struct Parser;
 };
 
 #endif // QUERY_HPP
