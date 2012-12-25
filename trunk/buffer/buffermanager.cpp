@@ -3,7 +3,7 @@
 #include <cstring>
 #include <algorithm>
 
-BufferManager::BufferManager(DB* db, uint32 pages) : m_db(db), m_pages(std::max(pages, (uint32)MIN_PAGES_IN_MEMORY)),
+BufferManager::BufferManager(std::string directory, uint32 pages) : m_directory(directory), m_pages(std::max(pages, (uint32)MIN_PAGES_IN_MEMORY)),
         m_buffer(new char[PAGESIZE * m_pages]), max_priority(0) {
     memset(m_buffer, 0, m_pages * PAGESIZE);
     for(size_t i = 0; i != m_pages; ++i) {
@@ -56,8 +56,8 @@ uint32 BufferManager::get_address(uint32 table_id, uint32 page) {
 }
 
 DiskManager* BufferManager::get_disk_manager(uint32 table_id) {
-    if(m_disk_managers.count(table_id)) {
-        return m_disk_managers[table_id] = new DiskManager(get_dbfilename(table_id));
+    if(!m_disk_managers.count(table_id)) {
+        return m_disk_managers[table_id] = new DiskManager(m_directory + get_dbfilename(table_id));
     }
     return m_disk_managers[table_id];
 }

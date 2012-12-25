@@ -1,12 +1,13 @@
 #include "heapfile.h"
+#include "buffer/buffermanager.h"
+#include <cstdio>
 
 HeapFile::HeapFile(BufferManager* bm, uint32 table_id, Signature* signature) : m_bm(bm),
         m_table_id(table_id), m_signature(signature), m_record_size(signature->get_size_in_bytes()) {}
 
 void HeapFile::create() {
-    std::string filename = get_dbfilename(m_table_id);
-    FILE* f = fopen(filename.c_str(), "w");
-    fclose(f);
+    uint32 size = 0;
+    m_bm->write(m_table_id, 0, (char*)(&size), sizeof(uint32));
 }
 
 Record* HeapFile::get(uint32 index) const {

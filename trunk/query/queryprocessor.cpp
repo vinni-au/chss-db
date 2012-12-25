@@ -20,11 +20,13 @@ IDataReader* QueryProcessor::runQuery(Query *query)
             std::pair<std::string, DBDataType> cur = q->columns()[i];
             t.add_column(Column(cur.second, cur.first));
         }
-        m_db->metadata().add_table(t);
         HeapFile* file = new HeapFile(m_db->buffer(), 0, t.makeSignature());
+        t.set_file(file);
+        m_db->metadata().add_table(t);
+        file->create();
         return new MessageDataReader(std::string("OK"));
     } else if (query->type() == Query::Insert) {
-
+        //m_db->metadata.get_table()
     } else if (query->type() == Query::Select) {
 
     }

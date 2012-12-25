@@ -1,8 +1,8 @@
 #include "db.hpp"
 #include <fstream>
 
-DB::DB(std::string dir)
-    : m_buffer(0),
+DB::DB(std::string dir, uint32 pages)
+    : m_buffer(new BufferManager(dir, pages)),
       m_queryProcessor(new QueryProcessor(this)),
       m_dir(dir)
 {

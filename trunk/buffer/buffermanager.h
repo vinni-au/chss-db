@@ -9,7 +9,7 @@
 
 struct BufferManager {
 public:
-    BufferManager(DB* db, uint32 pages);
+    BufferManager(std::string directory, uint32 pages);
     ~BufferManager();
     uint32 read(uint32 table_id, uint32 offset, char* buffer, uint32 size);
     uint32 write(uint32 table_id, uint32 offset, char* buffer, uint32 size);
@@ -20,7 +20,7 @@ private:
     void write_page(uint32 table_id, uint32 page, uint32 address);
 
 private:
-    DB* m_db;
+    std::string m_directory;
     uint32 m_pages;
     char* m_buffer;
     uint32 max_priority;
