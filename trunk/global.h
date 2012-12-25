@@ -91,13 +91,38 @@ public:
 };
 
 struct DBDataValue {
-    DBDataValue(const DBDataType& type, void *value) :
-        m_type(type),
-        m_value(value)
+    explicit DBDataValue(int value) :
+        m_int(value),
+        m_type(DBDataType(DBDataType::INT))
     {   }
+
+    explicit DBDataValue(double value) :
+        m_double(value),
+        m_type(DBDataType(DBDataType::DOUBLE))
+    {   }
+
+    explicit DBDataValue(std::string value) :
+        m_string(value),
+        m_type(DBDataType(DBDataType::VARCHAR, value.length()))
+    {   }
+
+    int intValue() const
+    {   return m_int;   }
+
+    double doubleValue() const
+    {   return m_double;    }
+
+    std::string stringValue() const
+    {   return m_string;    }
+
+    DBDataType const &type() const
+    {   return m_type;  }
+
 protected:
     DBDataType m_type;
-    void* m_value;
+    int m_int;
+    double m_double;
+    std::string m_string;
 };
 
 struct RID {

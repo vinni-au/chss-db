@@ -1,5 +1,5 @@
 #include "heapfile.h"
-#include "buffer/buffermanager.h"
+#include "../buffer/buffermanager.h"
 #include <cstdio>
 
 HeapFile::HeapFile(BufferManager* bm, uint32 table_id, Signature* signature) : m_bm(bm),

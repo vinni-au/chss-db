@@ -13,8 +13,9 @@ void DBShell::run() {
         std::string cur;
         do {
             std::getline(std::cin, cur);
+            cur.push_back(' ');
             query.append(cur.c_str());
-        } while (cur.size());
+        } while (cur.size() >= 1);
         if (query == "exit")
             return;
         Parser parser(query);

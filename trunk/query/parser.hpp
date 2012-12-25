@@ -25,6 +25,7 @@ struct Parser
         Lex_where,
         Lex_intconst,
         Lex_doubleconst,
+        Lex_stringconst,
         Lex_asc,
         Lex_desc,
         Lex_Star,       // *
@@ -51,17 +52,19 @@ struct Parser
 
     Query* parse();
 
-    void nextch();
+    void nextch(bool ingoreCase = true);
     void nextsym();
     bool accept(int symbolexpected);
 
     char curchar;
-    int cursym;
-    int curpos;
+    bool negative;
+    int symbol;
+    uint32 curpos;
     std::string ident;
     int intconst;
     bool hasErrors;
     double doubleconst;
+    std::string stringconst;
     std::string source;
 };
 
