@@ -1,6 +1,7 @@
 #include "queryprocessor.hpp"
 #include "../metadata.h"
 #include "../messagedatareader.hpp"
+#include "../buffer/heapfile.h"
 
 QueryProcessor::QueryProcessor(DB *db)
     : m_db(db)
@@ -20,6 +21,7 @@ IDataReader* QueryProcessor::runQuery(Query *query)
             t.add_column(Column(cur.second, cur.first));
         }
         m_db->metadata().add_table(t);
+        HeapFile* file = new HeapFile(m_db->buffer(), 0, t.makeSignature());
         return new MessageDataReader(std::string("OK"));
     } else if (query->type() == Query::Insert) {
 

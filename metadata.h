@@ -2,6 +2,7 @@
 #define METADATA_H
 
 #include "global.h"
+#include "buffer/signature.h"
 #include <string>
 #include <vector>
 #include <fstream>
@@ -38,6 +39,7 @@ public:
         m_name = std::string(buf);
         delete[] buf;
     }
+
 };
 
 struct Table {
@@ -85,6 +87,16 @@ public:
         for(int i=0; i<t; ++i)
             m_columns[i].read(in);
         delete []buf;
+    }
+
+    Signature* makeSignature() {
+        std::vector<std::string> names;
+        std::vector<DBDataType> types;
+        for (int i = 0; i < (int)m_columns.size(); ++i) {
+            names.push_back(m_columns[i].get_name());
+            types.push_back(m_columns[i].get_type());
+        }
+        return new Signature(names, types);
     }
 };
 
