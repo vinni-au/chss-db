@@ -9,15 +9,21 @@ QueryProcessor::QueryProcessor(DB *db)
 
 IDataReader* QueryProcessor::runQuery(Query *query)
 {
-    if (query->type() == Q_Create) {
+    if (query == 0)
+        return 0;
+
+    if (query->type() == Query::Create) {
         CreateQuery* q = static_cast<CreateQuery*>(query);
         Table t(q->tablename());
-        for (int i = 0; i < q->columns().size(); ++i) {
-            std::pair<std::string, int> cur = q->columns()[i];
+        for (size_t i = 0; i < q->columns().size(); ++i) {
+            std::pair<std::string, DBDataType> cur = q->columns()[i];
             t.add_column(Column(cur.second, cur.first));
         }
+        m_db->metadata().add_table(t);
         return new MessageDataReader(std::string("OK"));
-    } else if (query->type() == Q_Select) {
+    } else if (query->type() == Query::Insert) {
+
+    } else if (query->type() == Query::Select) {
 
     }
     return 0;

@@ -38,7 +38,7 @@ public:
         assert(type==VARCHAR || type==INT || type==DOUBLE);
         if (type==INT || type==DOUBLE) {
             assert(len==0);
-        }
+        } else
         assert(len>0);
     }
 
@@ -88,6 +88,16 @@ public:
         return DBDataType(_type, _len);
     }
 
+};
+
+struct DBDataValue {
+    DBDataValue(const DBDataType& type, void *value) :
+        m_type(type),
+        m_value(value)
+    {   }
+protected:
+    DBDataType m_type;
+    void* m_value;
 };
 
 struct RID {

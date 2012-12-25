@@ -24,12 +24,14 @@ public:
 
     void print(std::ofstream &out) const {
         m_type.print(out);
-        out.write(m_name.c_str(), m_name.length());
+        int t = m_name.length() + 1;
+        out.write((char*)&t, sizeof(int));
+        out.write(m_name.c_str(), m_name.length() + 1);
     }
 
     void read(std::ifstream &in) {
-        in.read((char*)(&m_type), sizeof(int));
-        int t;
+        m_type.read(in);
+        int t = 0;
         in.read((char*)(&t), sizeof(int));
         char *buf = new char[t];
         in.read(buf, t);
@@ -62,8 +64,10 @@ public:
     }
 
     void print(std::ofstream &out) const {
-        out.write(m_name.c_str(), m_name.length());
-        int t = m_name.length();
+        int t = m_name.length() + 1;
+        out.write((char*)&t, sizeof(int));
+        out.write(m_name.c_str(), m_name.length() + 1);
+        t = (int)m_columns.size();
         out.write((char*)&t, sizeof(int));
         for(int i=0; i<(int)m_columns.size(); ++i) {
             m_columns[i].print(out);
@@ -71,7 +75,7 @@ public:
     }
 
     void read(std::ifstream &in) {
-        int t;
+        int t = 0;
         in.read((char*)(&t), sizeof(int));
         char *buf = new char[t];
         in.read(buf, t);
@@ -112,7 +116,7 @@ public:
     }
 
     void read(std::ifstream &in) {
-        int t;
+        int t = 0;
         in.read((char*)(&t), sizeof(int));
         m_tables = std::vector<Table>(t);
         for(int i=0; i<t; ++i)
