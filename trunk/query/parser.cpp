@@ -16,7 +16,9 @@ Parser::ltable Parser::lexems[] = {
     {"btree",   Parser::Lex_btree},
     {"hash",    Parser::Lex_hash},
     {"update",  Parser::Lex_update},
-    {"where",   Parser::Lex_where}
+    {"where",   Parser::Lex_where},
+    {"delete",  Parser::Lex_delete},
+    {"index",   Parser::Lex_index}
 };
 
 Parser::Parser(const std::string &source)
@@ -145,116 +147,169 @@ int Parser::searchKeyword(const std::string &word) {
 Query* Parser::parse() {
     nextch();
     nextsym();
-    if (symbol == Lex_create) {
-        nextsym();
-        CreateQuery* result = new CreateQuery;
 
-        if (symbol == Lex_table) {
-            accept(Lex_table);
-            result->m_tablename = ident;
+    if (symbol == Lex_create)
+        return p_create();
 
-            accept(Lex_Ident);
-            accept(Lex_Lparen);
+    if (symbol == Lex_select)
+        return p_select();
 
-            while (symbol == Lex_Ident &&
-                   symbol != Lex_Rparen && symbol != Lex_End) {
-                std::pair<std::string, DBDataType> col = make_pair(ident, DBDataType());
-                accept(Lex_Ident);
-                switch (symbol) {
-                case Lex_int:
-                    col.second = DBDataType(DBDataType::INT);
-                    nextsym();
-                    break;
-                case Lex_double:
-                    col.second = DBDataType(DBDataType::DOUBLE);
-                    nextsym();
-                    break;
-                case Lex_varchar:
-                    nextsym();
-                    accept(Lex_Lparen);
-                    if (intconst != 0)
-                        col.second = DBDataType(DBDataType::VARCHAR, intconst);
-                    accept(Lex_intconst);
-                    accept(Lex_Rparen);
-                    break;
-                }
-                result->m_columns.push_back(col);
-                if (symbol == Lex_Comma)
-                    nextsym();
-                else break;
-            }
+    if (symbol == Lex_insert)
+        return p_insert();
 
-            accept(Lex_Rparen);
+    if (symbol == Lex_update)
+        return p_update();
 
-            if (hasErrors) {
-                delete result;
-                result = 0;
-            }
-            return result;
-        }
-    } else if (symbol == Lex_select) {
-        accept(Lex_select);
+    if (symbol == Lex_delete)
+        return p_delete();
 
+    return 0;
+}
 
-        if (symbol == Lex_Star) {
-            accept(Lex_Star);
-            accept(Lex_from);
+InsertQuery* Parser::p_insert() {
+    InsertQuery* result = new InsertQuery;
+    std::vector<std::string> cols;
+    std::vector<DBDataValue> values;
 
-        }
-    } else if (symbol == Lex_insert) {
-        accept(Lex_insert);
-        accept(Lex_into);
-        InsertQuery* result = new InsertQuery;
-        result->m_tablename = ident;
+    accept(Lex_insert);
+    accept(Lex_into);
+    result->m_tablename = ident;
+    accept(Lex_Ident);
+    accept(Lex_Lparen);
+
+    while (symbol == Lex_Ident && symbol != Lex_Rparen && symbol != Lex_End) {
+        cols.push_back(ident);
         accept(Lex_Ident);
-        accept(Lex_Lparen);
-        std::vector<std::string> cols;
-        while (symbol == Lex_Ident && symbol != Lex_Rparen && symbol != Lex_End) {
-            cols.push_back(ident);
+        if (symbol == Lex_Comma)
+            accept(Lex_Comma);
+        else break;
+    }
+    accept(Lex_Rparen);
+
+    accept(Lex_values);
+    accept(Lex_Lparen);
+    while (symbol == Lex_intconst || symbol == Lex_doubleconst || symbol == Lex_stringconst) {
+        switch(symbol) {
+        case Lex_intconst:
+            values.push_back(DBDataValue(intconst));
+            accept(Lex_intconst);
+            break;
+        case Lex_doubleconst:
+            values.push_back(DBDataValue(doubleconst));
+            accept(Lex_doubleconst);
+            break;
+        case Lex_stringconst:
+            values.push_back(DBDataValue(stringconst));
+            accept(Lex_stringconst);
+            break;
+        }
+
+        if (symbol == Lex_Comma)
+            nextsym();
+        else break;
+    }
+    accept(Lex_Rparen);
+
+    if (cols.size() != values.size())
+        hasErrors = true;
+    for (uint32 i = 0; i < cols.size(); ++i)
+        result->m_values.push_back(make_pair(cols[i], values[i]));
+
+    if (hasErrors) {
+        delete result;
+        result = 0;
+    }
+    return result;
+}
+
+SelectQuery* Parser::p_select() {
+    SelectQuery* result = new SelectQuery;
+
+    accept(Lex_select);
+
+    if (symbol == Lex_Star) {
+        result->m_allCols = true;
+        accept(Lex_Star);
+    } else {
+        while (symbol == Lex_Ident) {
+            result->m_cols.push_back(ident);
             accept(Lex_Ident);
             if (symbol == Lex_Comma)
                 accept(Lex_Comma);
             else break;
         }
-        accept(Lex_Rparen);
+    }
 
-        accept(Lex_values);
+    accept(Lex_from);
+    result->m_tablename = ident;
+    accept(Lex_Ident);
+
+    if (symbol == Lex_where) {
+        accept(Lex_where);
+    }
+
+    if (hasErrors) {
+        delete result;
+        result = 0;
+    }
+    return result;
+}
+
+Query* Parser::p_create() {
+    accept(Lex_create);
+
+    if (symbol == Lex_table) {
+        CreateTableQuery* result = new CreateTableQuery;
+        accept(Lex_table);
+        result->m_tablename = ident;
+
+        accept(Lex_Ident);
         accept(Lex_Lparen);
-        std::vector<DBDataValue> values;
-        while ((symbol == Lex_intconst || symbol == Lex_doubleconst || symbol == Lex_stringconst)
-               && symbol != Lex_End && symbol != Lex_Rparen) {
-            switch(symbol) {
-            case Lex_intconst:
-                values.push_back(DBDataValue(intconst));
+
+        while (symbol == Lex_Ident) {
+            std::pair<std::string, DBDataType> col = make_pair(ident, DBDataType());
+            accept(Lex_Ident);
+            switch (symbol) {
+            case Lex_int:
+                col.second = DBDataType(DBDataType::INT);
+                nextsym();
+                break;
+            case Lex_double:
+                col.second = DBDataType(DBDataType::DOUBLE);
+                nextsym();
+                break;
+            case Lex_varchar:
+                nextsym();
+                accept(Lex_Lparen);
+                if (intconst != 0)
+                    col.second = DBDataType(DBDataType::VARCHAR, intconst);
                 accept(Lex_intconst);
-                break;
-            case Lex_doubleconst:
-                values.push_back(DBDataValue(doubleconst));
-                accept(Lex_doubleconst);
-                break;
-            case Lex_stringconst:
-                values.push_back(DBDataValue(stringconst));
-                accept(Lex_stringconst);
+                accept(Lex_Rparen);
                 break;
             }
-
+            result->m_columns.push_back(col);
             if (symbol == Lex_Comma)
                 nextsym();
             else break;
         }
-        accept(Lex_Rparen);
 
-        if (cols.size() != values.size())
-            hasErrors = true;
-        for (uint32 i = 0; i < cols.size(); ++i)
-            result->m_values.push_back(make_pair(cols[i], values[i]));
+        accept(Lex_Rparen);
 
         if (hasErrors) {
             delete result;
             result = 0;
         }
         return result;
+    } else if (symbol == Lex_index) {
     }
+    return 0;
+}
+
+UpdateQuery* Parser::p_update() {
+    return 0;
+}
+
+DeleteQuery* Parser::p_delete() {
     return 0;
 }
 
