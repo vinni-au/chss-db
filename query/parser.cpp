@@ -52,7 +52,7 @@ void Parser::nextsym() {
         do {
             ident.push_back(curchar);
             nextch();
-        } while (isalnum(curchar));
+        } while (isalnum(curchar) || curchar == '_');
 
         cursym = searchKeyword(ident);
 
@@ -90,7 +90,7 @@ void Parser::nextsym() {
                 nextch();
             } while (isdigit(curchar));
             cursym = Lex_intconst;
-        }
+        } else cursym = Lex_Unknown;
     }
 
 }
