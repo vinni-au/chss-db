@@ -1,8 +1,10 @@
 #ifndef HEAPFILE_H
 #define HEAPFILE_H
 #include "../global.h"
-#include "buffermanager.h"
+//#include "buffermanager.h"
 #include "record.h"
+
+struct BufferManager;
 
 struct HeapFile {
 public:

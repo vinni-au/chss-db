@@ -9,9 +9,8 @@
 struct QueryProcessor;
 struct BufferManager;
 
-struct DB
-{
-    DB(std::string dir);
+struct DB {
+    DB(std::string dir, uint32 pages);
     virtual ~DB();
 
     BufferManager* buffer() const {
@@ -20,6 +19,10 @@ struct DB
 
     QueryProcessor* queryProcessor() const {
         return m_queryProcessor;
+    }
+
+    std::string get_dir() const {
+        return m_dir;
     }
 
     DBMetaData& metadata()

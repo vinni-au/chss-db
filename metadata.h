@@ -3,7 +3,9 @@
 
 #include "global.h"
 #include "buffer/signature.h"
+#include "buffer/heapfile.h"
 #include <string>
+#include <map>
 #include <vector>
 #include <fstream>
 
@@ -46,6 +48,7 @@ struct Table {
 private:
     std::string m_name;
     std::vector<Column> m_columns;
+    HeapFile* m_file;
 public:
     Table(std::string name): m_name(name), m_columns(std::vector<Column>()) {}
     Table() {}
@@ -61,8 +64,16 @@ public:
         return m_columns[idx];
     }
 
+    HeapFile* get_file() const {
+        return m_file;
+    }
+
     void add_column(Column const &column) {
         m_columns.push_back(column);
+    }
+
+    void set_file(HeapFile* file) {
+        m_file = file;
     }
 
     void print(std::ofstream &out) const {
@@ -103,6 +114,7 @@ public:
 struct DBMetaData {
 private:
     std::vector<Table> m_tables;
+    std::map<std::string, uint32> m_table_id;
 
 public:
     DBMetaData(): m_tables(std::vector<Table>()) {}
@@ -111,11 +123,17 @@ public:
         return (int)m_tables.size();
     }
 
+    Table &get_table(std::string tablename) {
+        uint32 index = m_table_id[tablename];
+        return m_tables[index];
+    }
+
     Table &get_table(int idx) {
         return m_tables[idx];
     }
 
     void add_table(Table const &table) {
+        m_table_id[table.get_name()] = m_tables.size();
         m_tables.push_back(table);
     }
 
@@ -128,11 +146,14 @@ public:
     }
 
     void read(std::ifstream &in) {
-        int t = 0;
-        in.read((char*)(&t), sizeof(int));
-        m_tables = std::vector<Table>(t);
-        for(int i=0; i<t; ++i)
-            m_tables[i].read(in);
+        int table_count = 0;
+        in.read((char*)(&table_count), sizeof(int));
+        m_tables = std::vector<Table>();
+        for(int i=0; i<table_count; ++i) {
+            Table t;
+            t.read(in);
+            add_table(t);
+        }
     }
 };
 

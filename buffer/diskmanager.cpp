@@ -1,6 +1,13 @@
 #include "diskmanager.h"
 
 DiskManager::DiskManager(std::string dbfilename) : m_file(fopen(dbfilename.c_str(), "rb+")) {
+    if(!m_file) {
+        FILE* tmp = fopen(dbfilename.c_str(), "w");
+        uint32 size = 0;
+        fwrite(&size, 1, sizeof(uint32), tmp);
+        fclose(tmp);
+        m_file = fopen(dbfilename.c_str(), "rb+");
+    }
 }
 
 DiskManager::~DiskManager() {
