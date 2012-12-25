@@ -1,4 +1,5 @@
 #include "dbshell.hpp"
+#include "query/parser.hpp"
 #include <stdarg.h>
 
 DBShell::DBShell(DB *db) :
@@ -14,7 +15,10 @@ void DBShell::run() {
             std::getline(std::cin, cur);
             query.append(cur.c_str());
         } while (cur.size());
-        Query* q = Query::parse(query);
+        if (query == "exit")
+            return;
+        Parser parser(query);
+        Query* q = parser.parse();
         IDataReader* reader = m_db->queryProcessor()->runQuery(q);
         if (reader) {
             while (reader->hasNext()) {

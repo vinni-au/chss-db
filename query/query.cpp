@@ -2,6 +2,6 @@
 
 Query* Query::parse(std::string const &query)
 {
-    //TODO: implement this
+    int charnumber = 0;
     return 0;
 }
