@@ -14,7 +14,7 @@ IDataReader* QueryProcessor::runQuery(Query *query)
         return 0;
 
     if (query->type() == Query::Create) {
-        CreateQuery* q = static_cast<CreateQuery*>(query);
+        CreateTableQuery* q = static_cast<CreateTableQuery*>(query);
         Table t(q->tablename());
         for (size_t i = 0; i < q->columns().size(); ++i) {
             std::pair<std::string, DBDataType> cur = q->columns()[i];

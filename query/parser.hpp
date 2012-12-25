@@ -13,6 +13,8 @@ struct Parser
         Lex_insert,
         Lex_into,
         Lex_table,
+        Lex_delete,
+        Lex_index,
         Lex_values,
         Lex_from,
         Lex_int,
@@ -51,6 +53,11 @@ struct Parser
     int searchKeyword(std::string const& word);
 
     Query* parse();
+    Query* p_create();
+    InsertQuery* p_insert();
+    SelectQuery* p_select();
+    UpdateQuery* p_update();
+    DeleteQuery* p_delete();
 
     void nextch(bool ingoreCase = true);
     void nextsym();
