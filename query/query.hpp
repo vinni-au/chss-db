@@ -50,11 +50,22 @@ struct InsertQuery : Query
     const std::string& tablename() const
     {   return m_tablename; }
 
+    std::vector<std::pair<std::string, DBDataValue> > const& values() const
+    {   return m_values;    }
+
 protected:
     std::string m_tablename;
     std::vector<std::pair<std::string, DBDataValue> > m_values;
 
     friend struct Parser;
+};
+
+
+struct SelectQuety : Query
+{
+protected:
+    std::string m_tablename;
+    std::vector<std::string> m_cols;
 };
 
 #endif // QUERY_HPP
