@@ -27,4 +27,6 @@ DB::~DB()
     assert(m_mdfile.is_open() == true);
     m_metadata.print(m_mdfile);
     m_mdfile.close();
+    delete m_buffer;
+    delete m_queryProcessor;
 }

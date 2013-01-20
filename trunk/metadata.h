@@ -50,8 +50,8 @@ private:
     std::vector<Column> m_columns;
     HeapFile* m_file;
 public:
-    Table(std::string name): m_name(name), m_columns(std::vector<Column>()) {}
-    Table() {}
+    Table(std::string name, HeapFile* file): m_name(name), m_columns(std::vector<Column>()), m_file(file) {}
+    Table() : m_file(0) {}
     std::string const &get_name() const {
         return m_name;
     }
@@ -124,7 +124,7 @@ public:
     }
 
     Table &get_table(std::string tablename) {
-        uint32 index = m_table_id[tablename];
+        uint32 index = get_table_index(tablename);
         return m_tables[index];
     }
 
@@ -132,9 +132,17 @@ public:
         return m_tables[idx];
     }
 
+    uint32 get_table_index(std::string tablename) {
+        uint32 index = m_table_id[tablename];
+    }
+
     void add_table(Table const &table) {
         m_table_id[table.get_name()] = m_tables.size();
         m_tables.push_back(table);
+    }
+
+    bool exist_table(std::string tablename) const {
+        return m_table_id.count(tablename);
     }
 
     void print(std::ofstream &out) const {
