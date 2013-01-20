@@ -25,14 +25,14 @@ struct DB {
         return m_dir;
     }
 
-    DBMetaData& metadata()
+    DBMetaData* metadata()
     {   return m_metadata;    }
 
 private:
     BufferManager* m_buffer;
     QueryProcessor* m_queryProcessor;
     std::string m_dir;
-    DBMetaData m_metadata;
+    DBMetaData* m_metadata;
 };
 
 #include "query/queryprocessor.hpp"

@@ -30,7 +30,7 @@ int Record::getInt(uint32 pos) const {
 
 double Record::getDouble(uint32 pos) const {
     uint32 offset = m_signature->get_offset(pos);
-    return *(int*)(m_data + offset);
+    return *(double*)(m_data + offset);
 }
 
 std::string Record::getVarchar(uint32 pos) const {
