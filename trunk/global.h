@@ -119,9 +119,9 @@ struct DBDataValue {
     {   return m_type;  }
 
 protected:
-    DBDataType m_type;
     int m_int;
     double m_double;
+    DBDataType m_type;
     std::string m_string;
 };
 

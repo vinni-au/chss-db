@@ -128,12 +128,13 @@ public:
         return m_tables[index];
     }
 
-    Table &get_table(int idx) {
-        return m_tables[idx];
+    Table &get_table(int index) {
+        return m_tables[index];
     }
 
     uint32 get_table_index(std::string tablename) {
         uint32 index = m_table_id[tablename];
+        return index;
     }
 
     void add_table(Table const &table) {
@@ -147,6 +148,7 @@ public:
 
     void print(std::ofstream &out) const {
         int t = m_tables.size();
+        std::cout << m_tables.size() << std::endl;
         out.write((char*)(&t), sizeof(int));
         for(int i=0; i<(int)m_tables.size(); ++i) {
             m_tables[i].print(out);
