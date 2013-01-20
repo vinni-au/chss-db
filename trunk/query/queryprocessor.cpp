@@ -19,8 +19,10 @@ IDataReader* QueryProcessor::runQuery(Query *query)
             return new MessageDataReader("Table is already exist");
         }
         uint32 tables_count = meta->get_tables_count();
-        Table t(q->tablename(), new HeapFile(m_db->buffer(), tables_count, t.makeSignature()));
-        HeapFile* file = t.get_file();
+        Table t;
+        t.set_tablename(q->tablename());
+        HeapFile* file = new HeapFile(m_db->buffer(), tables_count, t.makeSignature());
+        t.set_file(file);
         for (size_t i = 0; i < q->columns().size(); ++i) {
             std::pair<std::string, DBDataType> cur = q->columns()[i];
             t.add_column(Column(cur.second, cur.first));

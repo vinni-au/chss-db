@@ -55,6 +55,15 @@ public:
     std::string const &get_name() const {
         return m_name;
     }
+    ~Table() {
+        if(m_file) {
+            delete m_file;
+        }
+    }
+
+    void set_tablename(std::string tablename) {
+        m_name = tablename;
+    }
 
     int get_columns_count() const {
         return (int)m_columns.size();
