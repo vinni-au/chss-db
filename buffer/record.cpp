@@ -8,6 +8,21 @@ char* Record::get_data_pointer() const {
     return m_data;
 }
 
+void Record::setInt(uint32 pos, int value) {
+    uint32 offset = m_signature->get_offset(pos);
+    *(int*)(m_data + offset) = value;
+}
+
+void Record::setDouble(uint32 pos, double value) {
+    uint32 offset = m_signature->get_offset(pos);
+    *(double*)(m_data + offset) = value;
+}
+
+void Record::setVarchar(uint32 pos, std::string value) {
+    uint32 offset = m_signature->get_offset(pos);
+    memcpy(m_data + offset, value.c_str(), value.size());
+}
+
 int Record::getInt(uint32 pos) const {
     uint32 offset = m_signature->get_offset(pos);
     return *(int*)(m_data + offset);

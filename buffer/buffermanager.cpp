@@ -57,7 +57,7 @@ uint32 BufferManager::get_address(uint32 table_id, uint32 page) {
 
 DiskManager* BufferManager::get_disk_manager(uint32 table_id) {
     if(!m_disk_managers.count(table_id)) {
-        return m_disk_managers[table_id] = new DiskManager(m_directory + get_dbfilename(table_id));
+        return m_disk_managers[table_id] = new DiskManager(m_directory + "/" + get_dbfilename(table_id));
     }
     return m_disk_managers[table_id];
 }

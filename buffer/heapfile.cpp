@@ -17,11 +17,15 @@ Record* HeapFile::get(uint32 index) const {
 }
 
 void HeapFile::add(Record* r) {
-    m_bm->write(m_table_id, HEADER_SIZE + m_record_size * get_size(), r->get_data_pointer(), m_record_size);
+    r->get_data_pointer();
+    uint32 size = get_size();
+    m_bm->write(m_table_id, HEADER_SIZE + m_record_size * size, r->get_data_pointer(), m_record_size);
+    ++size;
+    m_bm->write(m_table_id, 0, (char*)(&size), HEADER_SIZE);
 }
 
 uint32 HeapFile::get_size() const {
     uint32 size = 0;
-    m_bm->write(m_table_id, 0, (char*)(&size), HEADER_SIZE);
+    m_bm->read(m_table_id, 0, (char*)(&size), HEADER_SIZE);
     return size;
 }
