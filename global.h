@@ -91,6 +91,9 @@ public:
 };
 
 struct DBDataValue {
+    explicit DBDataValue() {
+    }
+
     explicit DBDataValue(int value) :
         m_int(value),
         m_type(DBDataType(DBDataType::INT))

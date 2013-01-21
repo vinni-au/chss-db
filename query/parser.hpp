@@ -25,6 +25,7 @@ struct Parser
         Lex_hash,
         Lex_update,
         Lex_where,
+        Lex_set,
         Lex_intconst,
         Lex_doubleconst,
         Lex_stringconst,
@@ -35,6 +36,7 @@ struct Parser
         Lex_Rparen,     // )
         Lex_Semicolon,  // ;
         Lex_Comma,      // ,
+        Lex_eq,         // =
         Lex_End,
         Lex_Unknown,
         Lex_Ident
@@ -58,6 +60,10 @@ struct Parser
     SelectQuery* p_select();
     UpdateQuery* p_update();
     DeleteQuery* p_delete();
+
+    std::vector< std::pair<std::string, DBDataValue> > p_valueslist();
+    DBDataValue p_value();
+    DBDataType p_type();
 
     void nextch(bool ingoreCase = true);
     void nextsym();
