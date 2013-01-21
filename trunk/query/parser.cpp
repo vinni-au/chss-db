@@ -18,7 +18,8 @@ Parser::ltable Parser::lexems[] = {
     {"update",  Parser::Lex_update},
     {"where",   Parser::Lex_where},
     {"delete",  Parser::Lex_delete},
-    {"index",   Parser::Lex_index}
+    {"index",   Parser::Lex_index},
+    {"set",     Parser::Lex_set}
 };
 
 Parser::Parser(const std::string &source)
@@ -99,6 +100,10 @@ void Parser::nextsym() {
         nextch();
         symbol = Lex_stringconst;
     }   break;
+    case '=':
+        symbol = Lex_eq;
+        nextch();
+        break;
     case '-':
         negative = true;
         nextch();
@@ -132,7 +137,6 @@ void Parser::nextsym() {
             }
         } else symbol = Lex_Unknown;
     }
-
 }
 
 int Parser::searchKeyword(const std::string &word) {
@@ -246,6 +250,7 @@ SelectQuery* Parser::p_select() {
 
     if (symbol == Lex_where) {
         accept(Lex_where);
+        //TODO:
     }
 
     if (hasErrors) {
@@ -253,6 +258,53 @@ SelectQuery* Parser::p_select() {
         result = 0;
     }
     return result;
+}
+
+DBDataValue Parser::p_value() {
+    if (symbol == Lex_intconst) {
+        DBDataValue result(intconst);
+        accept(Lex_intconst);
+        return result;
+    }
+
+    if (symbol == Lex_doubleconst) {
+        DBDataValue result(doubleconst);
+        accept(Lex_doubleconst);
+        return result;
+    }
+
+    if (symbol == Lex_stringconst) {
+        DBDataValue result(stringconst);
+        accept(Lex_stringconst);
+        return result;
+    }
+
+    return DBDataValue();
+}
+
+DBDataType Parser::p_type() {
+    if (symbol == Lex_int) {
+        DBDataType result(DBDataType::INT);
+        nextsym();
+        return result;
+    }
+
+    if (symbol == Lex_double) {
+        DBDataType result(DBDataType::DOUBLE);
+        nextsym();
+        return result;
+    }
+
+    if (symbol == Lex_varchar) {
+        accept(Lex_varchar);
+        accept(Lex_Lparen);
+        if (intconst != 0) {
+            DBDataType result(DBDataType::VARCHAR, intconst);
+            accept(Lex_intconst);
+            accept(Lex_Rparen);
+            return result;
+        }
+    }
 }
 
 Query* Parser::p_create() {
@@ -301,16 +353,66 @@ Query* Parser::p_create() {
         }
         return result;
     } else if (symbol == Lex_index) {
+        //TODO:
     }
     return 0;
 }
 
 UpdateQuery* Parser::p_update() {
-    return 0;
+    UpdateQuery* result = new UpdateQuery;
+    accept(Lex_update);
+
+    accept(Lex_table);
+    result->m_tablename = ident;
+    accept(Lex_Ident);
+    accept(Lex_set);
+    result->m_values = p_valueslist();
+    if (symbol == Lex_where) {
+        accept(Lex_where);
+        if (symbol == Lex_Ident) {
+            accept(Lex_Ident);
+            result->m_cond.first = ident;
+            accept(Lex_eq);
+            result->m_cond.second = p_value();
+        }
+    }
+    if (hasErrors) {
+        delete result;
+        result = 0;
+    }
+    return result;
 }
 
 DeleteQuery* Parser::p_delete() {
-    return 0;
+    DeleteQuery* result = new DeleteQuery;
+    accept(Lex_delete);
+    accept(Lex_from);
+    result->m_tablename = ident;
+    accept(Lex_Ident);
+    accept(Lex_where);
+    result->m_cond.first = ident;
+    accept(Lex_Ident);
+    accept(Lex_eq);
+    result->m_cond.second = p_value();
+    if (hasErrors) {
+        delete result;
+        result = 0;
+    }
+    return result;
+}
+
+std::vector< std::pair<std::string, DBDataValue> > Parser::p_valueslist() {
+    std::vector< std::pair<std::string, DBDataValue> > result;
+    while (symbol == Lex_Ident) {
+        accept(Lex_Ident);
+        accept(Lex_eq);
+        result.push_back(make_pair(ident, p_value()));
+
+        if (symbol == Lex_Comma)
+            nextsym();
+        else break;
+    }
+    return result;
 }
 
 bool Parser::accept(int symbolexpected) {
