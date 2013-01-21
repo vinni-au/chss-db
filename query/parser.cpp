@@ -19,7 +19,10 @@ Parser::ltable Parser::lexems[] = {
     {"where",   Parser::Lex_where},
     {"delete",  Parser::Lex_delete},
     {"index",   Parser::Lex_index},
-    {"set",     Parser::Lex_set}
+    {"set",     Parser::Lex_set},
+    {"on",      Parser::Lex_on},
+    {"asc",     Parser::Lex_asc},
+    {"desc",    Parser::Lex_desc}
 };
 
 Parser::Parser(const std::string &source)
@@ -250,7 +253,10 @@ SelectQuery* Parser::p_select() {
 
     if (symbol == Lex_where) {
         accept(Lex_where);
-        //TODO:
+        result->m_cond.first = ident;
+        accept(Lex_Ident);
+        accept(Lex_eq);
+        result->m_cond.second = p_value();
     }
 
     if (hasErrors) {
@@ -305,6 +311,8 @@ DBDataType Parser::p_type() {
             return result;
         }
     }
+
+    return DBDataType();
 }
 
 Query* Parser::p_create() {
@@ -353,7 +361,44 @@ Query* Parser::p_create() {
         }
         return result;
     } else if (symbol == Lex_index) {
-        //TODO:
+        accept(Lex_index);
+        CreateIndexQuery* result = new CreateIndexQuery;
+        result->m_name = ident;
+        accept(Lex_Ident);
+        accept(Lex_on);
+        result->m_tablename = ident;
+        accept(Lex_Ident);
+        accept(Lex_Lparen);
+        while (symbol == Lex_Ident) {
+            std::string col = ident;
+            accept(Lex_Ident);
+            if (symbol == Lex_asc) {
+                accept(Lex_asc);
+                result->m_cols.push_back(make_pair(col, true));
+            } else if (symbol == Lex_desc) {
+                accept(Lex_desc);
+                result->m_cols.push_back(make_pair(col, false));
+            }
+
+            if (symbol == Lex_Comma)
+                nextsym();
+            else break;
+        }
+        accept(Lex_Rparen);
+        accept(Lex_using);
+        if (symbol == Lex_btree) {
+            accept(Lex_btree);
+            result->m_indextype = CreateIndexQuery::BTREE;
+        } else if (symbol == Lex_hash) {
+            accept(Lex_hash);
+            result->m_indextype = CreateIndexQuery::HASH;
+        }
+
+        if (hasErrors) {
+            delete result;
+            result = 0;
+        }
+        return result;
     }
     return 0;
 }

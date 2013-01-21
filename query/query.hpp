@@ -92,11 +92,33 @@ protected:
 
 struct CreateIndexQuery : Query
 {
-    CreateIndexQuery()
+    enum Type {
+        BTREE = 0,
+        HASH
+    };
+
+    CreateIndexQuery() : m_indextype(-1)
     {   m_type = CreateIndex; }
+
+    std::string const& indexname() const
+    {   return m_name;  }
+
+    std::string const& tablename() const
+    {   return m_tablename; }
+
+    int indextype() const
+    {   return m_indextype; }
+
+    std::vector< std::pair<std::string, bool> > const& cols() const
+    {   return m_cols;  }
 
 protected:
     friend struct Parser;
+
+    std::string m_name;
+    std::string m_tablename;
+    int m_indextype;
+    std::vector< std::pair<std::string, bool> > m_cols;
 };
 
 struct UpdateQuery : Query

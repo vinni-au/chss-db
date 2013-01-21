@@ -26,6 +26,7 @@ struct Parser
         Lex_update,
         Lex_where,
         Lex_set,
+        Lex_on,
         Lex_intconst,
         Lex_doubleconst,
         Lex_stringconst,
