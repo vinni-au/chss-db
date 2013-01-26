@@ -132,13 +132,13 @@ public:
         return (int)m_tables.size();
     }
 
-    Table &get_table(std::string tablename) {
+    Table* get_table(std::string tablename) {
         uint32 index = get_table_index(tablename);
-        return m_tables[index];
+        return &m_tables[index];
     }
 
-    Table &get_table(int index) {
-        return m_tables[index];
+    Table* get_table(int index) {
+        return &m_tables[index];
     }
 
     uint32 get_table_index(std::string tablename) {
@@ -149,6 +149,7 @@ public:
     void add_table(Table const &table) {
         m_table_id[table.get_name()] = m_tables.size();
         m_tables.push_back(table);
+        std::cout << m_tables.size() << std::endl;
     }
 
     bool exist_table(std::string tablename) const {
