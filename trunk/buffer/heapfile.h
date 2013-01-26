@@ -17,6 +17,7 @@ private:
     static uint32 const HEADER_SIZE = sizeof(uint32);
     BufferManager* m_bm;
     uint32 m_table_id;
+    std::string m_table_file;
     Signature* m_signature;
     uint32 m_record_size;
 };

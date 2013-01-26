@@ -20,11 +20,15 @@ void DBShell::run() {
             return;
         Parser parser(query);
         Query* q = parser.parse();
+        std::cout << "in" << std::endl;
         IDataReader* reader = m_db->queryProcessor()->runQuery(q);
+        delete q;
+        std::cout << "out" << std::endl;
         if (reader) {
             while (reader->hasNext()) {
 
             }
+            delete reader;
         } else {
 //            postError("DBShell", "It seems to be wrong query");
         }

@@ -2,16 +2,17 @@
 #include "../metadata.h"
 #include "../messagedatareader.hpp"
 #include "../buffer/heapfile.h"
+#include "../buffer/indexfile.h"
 
 QueryProcessor::QueryProcessor(DB *db)
     : m_db(db)
 {
 }
 
-IDataReader* QueryProcessor::runQuery(Query *query)
-{
-    if (query == 0)
+IDataReader* QueryProcessor::runQuery(Query *query) {
+    if (query == 0) {
         return 0;
+    }
     DBMetaData* meta = m_db->metadata();
     if (query->type() == Query::Create) {
         CreateTableQuery* q = static_cast<CreateTableQuery*>(query);
@@ -21,15 +22,29 @@ IDataReader* QueryProcessor::runQuery(Query *query)
         uint32 tables_count = meta->get_tables_count();
         Table t;
         t.set_tablename(q->tablename());
-        HeapFile* file = new HeapFile(m_db->buffer(), tables_count, t.makeSignature());
-        t.set_file(file);
         for (size_t i = 0; i < q->columns().size(); ++i) {
             std::pair<std::string, DBDataType> cur = q->columns()[i];
             t.add_column(Column(cur.second, cur.first));
         }
+        HeapFile* file = new HeapFile(m_db->buffer(), tables_count, t.makeSignature());
+        t.set_file(file);
         meta->add_table(t);
         file->create();
         return new MessageDataReader(std::string("OK"));
+    } else if(query->type() == Query::CreateIndex) {
+        std::cout << "CreateIndex" << std::endl;
+        CreateIndexQuery* q = static_cast<CreateIndexQuery*>(query);
+        std::string tablename = q->tablename();
+        if(!meta->exist_table(tablename)) {
+            return new MessageDataReader("Table doesn't exist");
+        }
+        uint32 index = meta->get_table_index(tablename);
+        Table* t = meta->get_table(index);
+        Signature* signature = t->makeSignature();
+        signature->get_index(q->indexname());
+        IndexFile indexfile(m_db->buffer(), index, t->makeSignature());
+        //indexfile.findKey(0);
+        indexfile.createIndex(0);
     } else if (query->type() == Query::Insert) {
         InsertQuery* q = static_cast<InsertQuery*>(query);
         std::string tablename = q->tablename();
@@ -37,9 +52,8 @@ IDataReader* QueryProcessor::runQuery(Query *query)
             return new MessageDataReader("Table doesn't exist");
         }
         uint32 index = meta->get_table_index(tablename);
-        std::cout << "Table index: " << index << std::endl;
-        Table t = meta->get_table(index);
-        Signature* signature = t.makeSignature();
+        Table* t = meta->get_table(index);
+        Signature* signature = t->makeSignature();
         Record record(signature);
         for (size_t i = 0; i < q->values().size(); ++i) {
             std::pair<std::string, DBDataValue> cur = q->values()[i];
@@ -56,11 +70,16 @@ IDataReader* QueryProcessor::runQuery(Query *query)
                     break;
             }
         }
-        if(t.get_file() == 0) {
-            t.set_file(new HeapFile(m_db->buffer(), index, t.makeSignature()));
+        if(t->get_file() == 0) {
+            std::cout << "creating" << std::endl;
+            t->set_file(new HeapFile(m_db->buffer(), index, t->makeSignature()));
         }
-        HeapFile* file = t.get_file();
+        HeapFile* file = t->get_file();
+        static int cnt = 0;
+        std::cout << ">in" << file << ' ' << ++cnt << std::endl;
         file->add(&record);
+        std::cout << ">out" << std::endl;
+        delete signature;
     } else if (query->type() == Query::Select) {
         SelectQuery* q = static_cast<SelectQuery*>(query);
         std::string tablename = q->tablename();
@@ -68,20 +87,20 @@ IDataReader* QueryProcessor::runQuery(Query *query)
             return new MessageDataReader("Table doesn't exist");
         }
         uint32 index = meta->get_table_index(tablename);
-        Table t = meta->get_table(index);
-        Signature* signature = t.makeSignature();
-        if(t.get_file() == 0) {
-            t.set_file(new HeapFile(m_db->buffer(), index, t.makeSignature()));
+        Table* t = meta->get_table(index);
+        Signature* signature = t->makeSignature();
+        if(t->get_file() == 0) {
+            t->set_file(new HeapFile(m_db->buffer(), index, t->makeSignature()));
         }
-        HeapFile* file = t.get_file();
+        HeapFile* file = t->get_file();
         uint32 size = file->get_size();
-        for(uint32 i = 0; i < t.get_columns_count(); ++i) {
-            std::cout << t.get_column(i).get_name() << "\t";
+        for(uint32 i = 0; i < t->get_columns_count(); ++i) {
+            std::cout << t->get_column(i).get_name() << "\t";
         }
         std::cout << std::endl;
         for(uint32 i = 0; i != size; ++i) {
             Record* record = file->get(i);
-            for(uint32 j = 0; j < t.get_columns_count(); ++j) {
+            for(uint32 j = 0; j < t->get_columns_count(); ++j) {
                 switch(signature->get_field_type(j).get_type()) {
                     case 1:
                         std::cout << record->getInt(j) << "\t";
@@ -96,6 +115,8 @@ IDataReader* QueryProcessor::runQuery(Query *query)
             }
             std::cout << std::endl;
         }
+        IndexFile indexfile(m_db->buffer(), index, t->makeSignature());
+        indexfile.findKey(0);
         std::cout << size << " record(s)" << std::endl;
     }
     return 0;

@@ -14,7 +14,10 @@ SOURCES += main.cpp \
     messagedatareader.cpp \
     buffer/signature.cpp \
     buffer/heapfile.cpp \
-    query/parser.cpp
+    query/parser.cpp \
+    buffer/indexfile.cpp \
+    buffer/BtreeIndex.cpp \
+    buffer/index.cpp
 
 HEADERS += \
     global.h \
@@ -30,7 +33,10 @@ HEADERS += \
     buffer/buffermanager.h \
     buffer/signature.h \
     buffer/heapfile.h \
-    query/parser.hpp
+    query/parser.hpp \
+    buffer/indexfile.h \
+    buffer/BtreeIndex.h \
+    buffer/index.h
 
 OTHER_FILES += \
     buffer/ABOUT \
