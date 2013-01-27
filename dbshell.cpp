@@ -25,8 +25,8 @@ void DBShell::run() {
         delete q;
         std::cout << "out" << std::endl;
         if (reader) {
+            Signature s = reader->getSchema();
             while (reader->hasNext()) {
-
             }
             delete reader;
         } else {
