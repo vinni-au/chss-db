@@ -8,7 +8,7 @@ Record* IndexIterator::getNextRecord() {
 }
 
 bool IndexIterator::hasNextRecord() {
-
+    return false;
 }
 
 
@@ -22,6 +22,7 @@ void Index::addKey(int key, uint32 page) {
 }
 
 IndexIterator* Index::findKey(int key) {
+    return 0;
 }
 
 void Index::deleteKey(int key, uint32 page) {
