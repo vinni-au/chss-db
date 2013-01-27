@@ -20,10 +20,8 @@ void DBShell::run() {
             return;
         Parser parser(query);
         Query* q = parser.parse();
-        std::cout << "in" << std::endl;
         IDataReader* reader = m_db->queryProcessor()->runQuery(q);
         delete q;
-        std::cout << "out" << std::endl;
         if (reader) {
             Signature s = reader->getSchema();
             while (reader->hasNext()) {

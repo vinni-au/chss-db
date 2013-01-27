@@ -21,9 +21,7 @@ void HeapFile::add(Record* r) {
     uint32 size = get_size();
     m_bm->write(m_table_file, HEADER_SIZE + m_record_size * size, r->get_data_pointer(), m_record_size);
     ++size;
-    std::cout << ">>in" << HEADER_SIZE + m_record_size * size << std::endl;
     m_bm->write(m_table_file, 0, (char*)(&size), HEADER_SIZE);
-    std::cout << ">>out" << std::endl;
 }
 
 uint32 HeapFile::get_size() const {

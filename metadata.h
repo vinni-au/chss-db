@@ -122,11 +122,16 @@ public:
 
 struct DBMetaData {
 private:
-    std::vector<Table> m_tables;
+    std::vector<Table*> m_tables;
     std::map<std::string, uint32> m_table_id;
 
 public:
-    DBMetaData(): m_tables(std::vector<Table>()) {}
+    DBMetaData(): m_tables(std::vector<Table*>()) {}
+    ~DBMetaData() {
+        for(uint32 i = 0; i < m_tables.size(); ++i) {
+            delete m_tables[i];
+        }
+    }
 
     int get_tables_count() const {
         return (int)m_tables.size();
@@ -134,11 +139,11 @@ public:
 
     Table* get_table(std::string tablename) {
         uint32 index = get_table_index(tablename);
-        return &m_tables[index];
+        return m_tables[index];
     }
 
     Table* get_table(int index) {
-        return &m_tables[index];
+        return m_tables[index];
     }
 
     uint32 get_table_index(std::string tablename) {
@@ -146,10 +151,9 @@ public:
         return index;
     }
 
-    void add_table(Table const &table) {
-        m_table_id[table.get_name()] = m_tables.size();
+    void add_table(Table* table) {
+        m_table_id[table->get_name()] = m_tables.size();
         m_tables.push_back(table);
-        std::cout << m_tables.size() << std::endl;
     }
 
     bool exist_table(std::string tablename) const {
@@ -161,17 +165,17 @@ public:
         std::cout << m_tables.size() << std::endl;
         out.write((char*)(&t), sizeof(int));
         for(int i=0; i<(int)m_tables.size(); ++i) {
-            m_tables[i].print(out);
+            m_tables[i]->print(out);
         }
     }
 
     void read(std::ifstream &in) {
         int table_count = 0;
         in.read((char*)(&table_count), sizeof(int));
-        m_tables = std::vector<Table>();
+        m_tables = std::vector<Table*>();
         for(int i=0; i<table_count; ++i) {
-            Table t;
-            t.read(in);
+            Table* t = new Table();
+            t->read(in);
             add_table(t);
         }
     }
