@@ -15,19 +15,20 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
     }
     DBMetaData* meta = m_db->metadata();
     if (query->type() == Query::Create) {
+        std::cout << "Create Table" << std::endl;
         CreateTableQuery* q = static_cast<CreateTableQuery*>(query);
         if(meta->exist_table(q->tablename())) {
             return new MessageDataReader("Table is already exist");
         }
         uint32 tables_count = meta->get_tables_count();
-        Table t;
-        t.set_tablename(q->tablename());
+        Table* t = new Table();
+        t->set_tablename(q->tablename());
         for (size_t i = 0; i < q->columns().size(); ++i) {
             std::pair<std::string, DBDataType> cur = q->columns()[i];
-            t.add_column(Column(cur.second, cur.first));
+            t->add_column(Column(cur.second, cur.first));
         }
-        HeapFile* file = new HeapFile(m_db->buffer(), tables_count, t.makeSignature());
-        t.set_file(file);
+        HeapFile* file = new HeapFile(m_db->buffer(), tables_count, t->makeSignature());
+        t->set_file(file);
         meta->add_table(t);
         file->create();
         return new MessageDataReader(std::string("OK"));
@@ -46,9 +47,11 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
         //indexfile.findKey(0);
         indexfile.createIndex(0);
     } else if (query->type() == Query::Insert) {
+        std::cout << "Insert" << std::endl;
         InsertQuery* q = static_cast<InsertQuery*>(query);
         std::string tablename = q->tablename();
         if(!meta->exist_table(tablename)) {
+                    std::cout << "Error" << std::endl;
             return new MessageDataReader("Table doesn't exist");
         }
         uint32 index = meta->get_table_index(tablename);
@@ -71,14 +74,12 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
             }
         }
         if(t->get_file() == 0) {
-            std::cout << "creating" << std::endl;
+            std::cout << "BM" << m_db->buffer() << std::endl;
             t->set_file(new HeapFile(m_db->buffer(), index, t->makeSignature()));
         }
         HeapFile* file = t->get_file();
         static int cnt = 0;
-        std::cout << ">in" << file << ' ' << ++cnt << std::endl;
         file->add(&record);
-        std::cout << ">out" << std::endl;
         delete signature;
     } else if (query->type() == Query::Select) {
         SelectQuery* q = static_cast<SelectQuery*>(query);
