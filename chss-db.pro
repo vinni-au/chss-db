@@ -17,7 +17,7 @@ SOURCES += main.cpp \
     query/parser.cpp \
     buffer/indexfile.cpp \
     buffer/noindex.cpp \
-    buffer/btreeIndex.cpp
+    buffer/btreeindex.cpp
 
 HEADERS += \
     global.h \

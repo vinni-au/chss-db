@@ -1,10 +1,12 @@
 #ifndef INDEXFILE_H
 #define INDEXFILE_H
 #include "../global.h"
-//#include "buffermanager.h"
+#include "buffermanager.h"
 #include "record.h"
 
 struct BufferManager;
+
+struct IndexIterator;
 
 struct IndexFile {
 public:
@@ -14,8 +16,7 @@ public:
     Record* get(uint32 index) const;
     void add(Record* r);
     void createIndex(uint32 column, uint32 index_type);
-    std::pair<uint32, uint32> BTree_search(uint32 column, uint32 page, uint32 pos, uint32 key);
-
+    IndexIterator* select_where(uint32 column, uint32 key, uint32 index_type);
     static uint32 const TABLE_HEADER_SIZE = sizeof(uint32);
 private:
     BufferManager* m_bm;
