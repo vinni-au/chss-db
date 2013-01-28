@@ -23,8 +23,8 @@ void DBShell::run() {
         IDataReader* reader = m_db->queryProcessor()->runQuery(q);
         delete q;
         if (reader) {
-            Signature s = reader->getSchema();
-            while (reader->hasNext()) {
+            Signature* s = reader->getSignature();
+            while (reader->hasNextRecord()) {
             }
             delete reader;
         } else {

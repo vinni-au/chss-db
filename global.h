@@ -138,9 +138,9 @@ struct Signature;
 struct Record;
 
 struct IDataReader {
-    virtual bool hasNext() = 0;
-    virtual Signature getSchema() = 0;
-    virtual Record getTuple() = 0;
+    virtual bool hasNextRecord() = 0;
+    virtual Signature* getSignature() = 0;
+    virtual Record* getNextRecord() = 0;
 };
 
 extern inline void postError(const char* who, const char* message);
