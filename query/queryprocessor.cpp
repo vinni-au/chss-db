@@ -45,7 +45,7 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
         signature->get_index(q->indexname());
         IndexFile indexfile(m_db->buffer(), index, t->makeSignature());
         //indexfile.findKey(0);
-        indexfile.createIndex(0);
+        indexfile.createIndex(0, 1);
     } else if (query->type() == Query::Insert) {
         std::cout << "Insert" << std::endl;
         InsertQuery* q = static_cast<InsertQuery*>(query);
@@ -117,7 +117,7 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
             std::cout << std::endl;
         }
         IndexFile indexfile(m_db->buffer(), index, t->makeSignature());
-        indexfile.findKey(0);
+//        indexfile.
         std::cout << size << " record(s)" << std::endl;
     }
     return 0;

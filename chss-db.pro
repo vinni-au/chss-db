@@ -16,8 +16,8 @@ SOURCES += main.cpp \
     buffer/heapfile.cpp \
     query/parser.cpp \
     buffer/indexfile.cpp \
-    buffer/BtreeIndex.cpp \
-    buffer/noindex.cpp
+    buffer/noindex.cpp \
+    buffer/btreeIndex.cpp
 
 HEADERS += \
     global.h \
@@ -35,9 +35,9 @@ HEADERS += \
     buffer/heapfile.h \
     query/parser.hpp \
     buffer/indexfile.h \
-    buffer/BtreeIndex.h \
     buffer/index.h \
-    buffer/noindex.h
+    buffer/noindex.h \
+    buffer/btreeindex.h
 
 OTHER_FILES += \
     buffer/ABOUT \
