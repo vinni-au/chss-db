@@ -14,7 +14,7 @@ struct MessageDataReader : public IDataReader
 public:
     MessageDataReader(std::string);
 
-    bool hasNext() {
+    bool hasNextRecord() {
         if (ololo) {
             ololo = false;
             return true;
@@ -22,11 +22,11 @@ public:
         return false;
     }
 
-    Signature getSchema() {
-        return Signature(std::vector<std::string>(), std::vector<DBDataType>());
+    Signature* getSignature() {
+        return new Signature(std::vector<std::string>(), std::vector<DBDataType>());
     }
 
-    Record getTuple() {
+    Record* getNextRecord() {
 /*        std::vector<std::pair<DBDataType, void*> > v;
         if (ololo) {
             std::pair<DBDataType, void*> p = std::pair<DBDataType, void*>(DBDataType::VARCHAR, (void*)msg.c_str());
@@ -34,7 +34,7 @@ public:
             return v;
         }
         return v;*/
-        return Record(0);
+        return new Record(0);
     }
 
 private:

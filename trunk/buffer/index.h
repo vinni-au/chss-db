@@ -1,20 +1,12 @@
 #ifndef INDEX_H
 #define INDEX_H
 
+#include "./global.h"
 #include "record.h"
 #include "buffermanager.h"
 #include "indexfile.h"
 
-struct Index;
-
-struct IndexIterator {
-    IndexIterator(Index* index, int key) : m_index(index), m_key(key) {}
-    virtual Record* getNextRecord() = 0;
-    virtual bool hasNextRecord() = 0;
-protected:
-    Index* m_index;
-    int m_key;
-};
+struct IndexIterator;
 
 struct Index {
     Index(IndexFile* file, BufferManager* bm, Signature* signature, uint32 table_id, uint32 column) :
@@ -29,6 +21,18 @@ struct Index {
     Signature* m_signature;
     uint32 m_table_id;
     uint32 m_column;
+};
+
+struct IndexIterator : IDataReader {
+    IndexIterator(Index* index, int key) : m_index(index), m_key(key) {}
+    Record* getNextRecord() = 0;
+    bool hasNextRecord() = 0;
+    Signature* getSignature() {
+        return m_index->m_signature;
+    }
+protected:
+    Index* m_index;
+    int m_key;
 };
 
 #endif // INDEX_H
