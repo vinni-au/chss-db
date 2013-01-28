@@ -17,7 +17,6 @@ int main(int argc, char* argv[])
     } else {
         std::string dirname(argv[1]);
         int pages = atoi(argv[2]);
-        std::cout << &pages << std::endl;
         DB* db = new DB(dirname, pages);
         DBShell* shell = new DBShell(db);
         shell->run();
