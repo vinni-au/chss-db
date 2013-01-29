@@ -14,7 +14,7 @@ private:
 };
 
 struct Noindex : Index {
-    Noindex(IndexFile* file, BufferManager* bm, Signature* signature, uint32 table_id, uint32 column) : Index(file, bm, signature, table_id, column) {};
+    Noindex(IndexFile* file, BufferManager* bm, Signature* signature, uint32 table_id, uint32 column) : Index(file, bm, signature, table_id, column) {}
     void createIndex();
     void addKey(DBDataValue key, uint32 value);
     NoindexIterator* findKey(DBDataValue key);
