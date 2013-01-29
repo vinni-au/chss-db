@@ -39,7 +39,7 @@ public:
         if (type==INT || type==DOUBLE) {
             assert(len==0);
         } else
-        assert(len>0);
+        assert(len>0 && len<=255);
     }
 
     DBDataType() {
