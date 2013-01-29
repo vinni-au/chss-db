@@ -1,7 +1,7 @@
 #ifndef INDEX_H
 #define INDEX_H
 
-#include "./global.h"
+#include "../global.h"
 #include "record.h"
 #include "buffermanager.h"
 #include "indexfile.h"

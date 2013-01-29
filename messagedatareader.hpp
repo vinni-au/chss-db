@@ -15,32 +15,19 @@ public:
     MessageDataReader(std::string);
 
     bool hasNextRecord() {
-        if (ololo) {
-            ololo = false;
-            return true;
-        }
-        return false;
+        return m_hasNext;
     }
 
     Signature* getSignature() {
-        return new Signature(std::vector<std::string>(), std::vector<DBDataType>());
+        return m_sig;
     }
 
-    Record* getNextRecord() {
-/*        std::vector<std::pair<DBDataType, void*> > v;
-        if (ololo) {
-            std::pair<DBDataType, void*> p = std::pair<DBDataType, void*>(DBDataType::VARCHAR, (void*)msg.c_str());
-            v.push_back(p);
-            return v;
-        }
-        return v;*/
-        return new Record(0);
-    }
+    Record* getNextRecord();
 
 private:
-    bool ololo;
-
-    std::string msg;
+    bool m_hasNext;
+    Signature* m_sig;
+    std::string m_msg;
 };
 
 #endif // MESSAGEDATAREADER_HPP

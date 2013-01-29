@@ -70,6 +70,17 @@ public:
         in.read((char*)(&m_len), sizeof(int));
     }
 
+    std::string name() {
+        if (get_type() == INT)
+            return "int";
+
+        if (get_type() == DOUBLE)
+            return "double";
+
+        if (get_type() == VARCHAR)
+            return "string";
+    }
+
     static DBDataType construct(std::string const &type) {
         int _type;
         int _len = 0;

@@ -24,25 +24,33 @@ void DBShell::run() {
         delete q;
         if (reader) {
             Signature* signature = reader->getSignature();
+            for (int i = 0; i < s->get_size(); ++i) {
+                if (i != 0)
+                    std::cout << ",";
+                DBDataType type = s->get_field_type(i);
+                std::cout << s->get_name(i) << "(";
+                std::cout << type.name();
+                std::cout << ")";
+            }
+            std::cout << std::endl;
             while (reader->hasNextRecord()) {
-                Record* record = reader->getNextRecord();
-                for(uint32 i = 0; i < signature->get_size(); ++i) {
-                    if(i > 0)
+                Record* current = reader->getNextRecord();
+                for (int i = 0; i < s->get_size(); ++i) {
+                    if (i != 0)
                         std::cout << ",";
-                    switch(signature->get_field_type(i).get_type()) {
-                        case 1:
-                            std::cout << record->getInt(i);
-                            break;
-                        case 2:
-                            std::cout << record->getDouble(i);
-                            break;
-                        case 0:
-                            std::cout << "\"" << record->getVarchar(i) << "\"";
-                            break;
+                    switch(s->get_field_type(i).get_type()) {
+                    case DBDataType::INT:
+                        std::cout << current->getInt(i);
+                        break;
+                    case DBDataType::DOUBLE:
+                        std::cout << current->getDouble(i);
+                        break;
+                    case DBDataType::VARCHAR:
+                        std::cout << current->getVarchar(i);
+                        break;
                     }
-                    std::cout << std::endl;
                 }
-                delete record;
+                std::cout << std::endl;
             }
             delete reader;
         } else {
