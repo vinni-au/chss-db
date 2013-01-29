@@ -109,6 +109,9 @@ struct CreateIndexQuery : Query
     int indextype() const
     {   return m_indextype; }
 
+    bool is_unique() const
+    {   return m_unique;    }
+
     std::vector< std::pair<std::string, bool> > const& cols() const
     {   return m_cols;  }
 
@@ -117,6 +120,7 @@ protected:
 
     std::string m_name;
     std::string m_tablename;
+    bool m_unique;
     int m_indextype;
     std::vector< std::pair<std::string, bool> > m_cols;
 };

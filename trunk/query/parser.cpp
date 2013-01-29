@@ -22,7 +22,8 @@ Parser::ltable Parser::lexems[] = {
     {"set",     Parser::Lex_set},
     {"on",      Parser::Lex_on},
     {"asc",     Parser::Lex_asc},
-    {"desc",    Parser::Lex_desc}
+    {"desc",    Parser::Lex_desc},
+    {"unique",  Parser::Lex_unique}
 };
 
 Parser::Parser(const std::string &source)
@@ -360,7 +361,12 @@ Query* Parser::p_create() {
             result = 0;
         }
         return result;
-    } else if (symbol == Lex_index) {
+    } else if (symbol == Lex_index || lex == Lex_unique) {
+        bool needUnique = false;
+        if (lex == Lex_unique) {
+            accept(Lex_unique);
+            needUnique = true;
+        }
         accept(Lex_index);
         CreateIndexQuery* result = new CreateIndexQuery;
         result->m_name = ident;
@@ -393,6 +399,7 @@ Query* Parser::p_create() {
             accept(Lex_hash);
             result->m_indextype = CreateIndexQuery::HASH;
         }
+        result->m_unique = needUnique;
 
         if (hasErrors) {
             delete result;

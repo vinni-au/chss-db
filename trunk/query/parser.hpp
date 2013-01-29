@@ -30,6 +30,7 @@ struct Parser
         Lex_intconst,
         Lex_doubleconst,
         Lex_stringconst,
+        Lex_unique,
         Lex_asc,
         Lex_desc,
         Lex_Star,       // *
