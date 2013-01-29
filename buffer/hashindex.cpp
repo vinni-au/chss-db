@@ -130,7 +130,7 @@ void HashIndex::deleteKey(DBDataValue key, uint32 value) {
         m_bm->read(m_file, start, buffer, bufsize);
         if (compare(key, buffer)) {
             if (*((uint32*)(buffer+bufsize)) == value) {
-                // DO DELETE HERE
+                // DO FUCKING DELETE HERE
             }
         }
 
