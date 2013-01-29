@@ -4,6 +4,26 @@
 #include "../buffer/heapfile.h"
 #include "../buffer/indexfile.h"
 
+struct FileIterator : IDataReader {
+    FileIterator(IndexFile* file) : m_file(file), m_current_position(0), m_size(file->get_size()) {}
+
+    bool hasNextRecord() {
+        return m_current_position < m_size;
+    }
+
+    Signature* getSignature() {
+        m_file->get_file_signature();
+    }
+
+    Record* getNextRecord() {
+        return m_file->get(m_current_position++);
+    }
+private:
+    IndexFile* m_file;
+    uint32 m_current_position;
+    uint32 m_size;
+};
+
 QueryProcessor::QueryProcessor(DB *db)
     : m_db(db)
 {
@@ -27,7 +47,7 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
             std::pair<std::string, DBDataType> cur = q->columns()[i];
             t->add_column(Column(cur.second, cur.first));
         }
-        HeapFile* file = new HeapFile(m_db->buffer(), tables_count, t->makeSignature());
+        IndexFile* file = new IndexFile(m_db->buffer(), tables_count, t->makeSignature());
         t->set_file(file);
         meta->add_table(t);
         file->create();
@@ -75,10 +95,9 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
         }
         if(t->get_file() == 0) {
             std::cout << "BM" << m_db->buffer() << std::endl;
-            t->set_file(new HeapFile(m_db->buffer(), index, t->makeSignature()));
+            t->set_file(new IndexFile(m_db->buffer(), index, t->makeSignature()));
         }
-        HeapFile* file = t->get_file();
-        static int cnt = 0;
+        IndexFile* file = t->get_file();
         file->add(&record);
         delete signature;
     } else if (query->type() == Query::Select) {
@@ -91,34 +110,15 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
         Table* t = meta->get_table(index);
         Signature* signature = t->makeSignature();
         if(t->get_file() == 0) {
-            t->set_file(new HeapFile(m_db->buffer(), index, t->makeSignature()));
+            t->set_file(new IndexFile(m_db->buffer(), index, t->makeSignature()));
         }
-        HeapFile* file = t->get_file();
-        uint32 size = file->get_size();
-        for(uint32 i = 0; i < t->get_columns_count(); ++i) {
-            std::cout << t->get_column(i).get_name() << "\t";
-        }
-        std::cout << std::endl;
-        for(uint32 i = 0; i != size; ++i) {
-            Record* record = file->get(i);
-            for(uint32 j = 0; j < t->get_columns_count(); ++j) {
-                switch(signature->get_field_type(j).get_type()) {
-                    case 1:
-                        std::cout << record->getInt(j) << "\t";
-                        break;
-                    case 2:
-                        std::cout << record->getDouble(j) << "\t";
-                        break;
-                    case 0:
-                        std::cout << record->getVarchar(j) << "\t";
-                        break;
-                }
-            }
-            std::cout << std::endl;
-        }
-        IndexFile indexfile(m_db->buffer(), index, t->makeSignature());
-//        indexfile.
-        std::cout << size << " record(s)" << std::endl;
+//        if(q->condition()) {
+            IndexFile indexfile(m_db->buffer(), index, t->makeSignature());
+            std::pair< std::string, DBDataValue > cond = q->condition();
+            uint32 column = signature->get_index(cond.first);
+//            return indexfile.select(column, cond.second, 1);
+            return new FileIterator(&indexfile);
+//        }
     }
     return 0;
 }

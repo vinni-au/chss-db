@@ -3,7 +3,7 @@
 
 #include "global.h"
 #include "buffer/signature.h"
-#include "buffer/heapfile.h"
+#include "buffer/indexfile.h"
 #include <string>
 #include <map>
 #include <vector>
@@ -48,9 +48,9 @@ struct Table {
 private:
     std::string m_name;
     std::vector<Column> m_columns;
-    HeapFile* m_file;
+    IndexFile* m_file;
 public:
-    Table(std::string name, HeapFile* file): m_name(name), m_columns(std::vector<Column>()), m_file(file) {}
+    Table(std::string name, IndexFile* file): m_name(name), m_columns(std::vector<Column>()), m_file(file) {}
     Table() : m_file(0) {}
     std::string const &get_name() const {
         return m_name;
@@ -73,7 +73,7 @@ public:
         return m_columns[idx];
     }
 
-    HeapFile* get_file() const {
+    IndexFile* get_file() const {
         return m_file;
     }
 
@@ -81,7 +81,7 @@ public:
         m_columns.push_back(column);
     }
 
-    void set_file(HeapFile* file) {
+    void set_file(IndexFile* file) {
         m_file = file;
     }
 

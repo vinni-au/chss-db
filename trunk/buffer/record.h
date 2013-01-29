@@ -11,6 +11,7 @@ public:
     char* get_data_pointer() const;
     int getInt(uint32 pos) const;
     double getDouble(uint32 pos) const;
+    DBDataValue get(uint32 pos) const;
     std::string getVarchar(uint32 pos) const;
 private:
     Signature* m_signature;

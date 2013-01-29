@@ -20,6 +20,10 @@ Record* IndexFile::get(uint32 index) const {
     return res;
 }
 
+Signature* IndexFile::get_file_signature() const {
+    return m_signature;
+}
+
 void IndexFile::add(Record* r) {
     r->get_data_pointer();
     uint32 size = get_size();
@@ -44,7 +48,7 @@ void IndexFile::createIndex(uint32 column, uint32 index_type) {
     current_index->createIndex();
 }
 
-IndexIterator* IndexFile::select_where(uint32 column, uint32 key, uint32 index_type) {
+IndexIterator* IndexFile::select(uint32 column, DBDataValue key, uint32 index_type) {
     Index* current_index = 0;
     if(index_type == 1) {
         current_index = new BTreeindex(this, m_bm, m_signature, m_table_id, column);

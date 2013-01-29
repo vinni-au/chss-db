@@ -2,7 +2,6 @@
 #define BUFFERMANAGER_H
 
 #include "../global.h"
-#include "../db.hpp"
 #include "diskmanager.h"
 #include <string>
 #include <map>

@@ -5,10 +5,10 @@
 #include "index.h"
 
 struct BTreeItem {
-    int key;
+    DBDataValue key;
     uint32 value;
     BTreeItem() {}
-    BTreeItem(int _key, uint32 _value) : key(_key), value(_value) {}
+    BTreeItem(DBDataValue _key, uint32 _value) : key(_key), value(_value) {}
     ~BTreeItem() {}
 };
 
@@ -30,7 +30,7 @@ private:
 };
 
 struct BTreeIterator : IndexIterator {
-    BTreeIterator(Index* index, int key, uint32 root) : IndexIterator(index, key), m_current_vertex(root), m_current_position(0) {}
+    BTreeIterator(Index* index, DBDataValue key, uint32 root) : IndexIterator(index, key), m_current_vertex(root), m_current_position(0) {}
     Record* getNextRecord();
     bool hasNextRecord();
 
@@ -44,9 +44,9 @@ private:
 struct BTreeindex : Index {
     BTreeindex(IndexFile* file, BufferManager* bm, Signature* signature, uint32 table_id, uint32 column);
     void createIndex();
-    void addKey(int key, uint32 page);
-    BTreeIterator* findKey(int key);
-    void deleteKey(int key, uint32 page);
+    void addKey(DBDataValue key, uint32 value);
+    BTreeIterator* findKey(DBDataValue key);
+    void deleteKey(DBDataValue key, uint32 value);
 private:
     void BTree_insert_nonfull(uint32 u, BTreeItem item);
     void BTree_split_child(uint32 u, uint32 index);
