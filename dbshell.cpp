@@ -27,15 +27,15 @@ void DBShell::run() {
             for (int i = 0; i < s->get_size(); ++i) {
                 if (i != 0)
                     std::cout << ",";
-                DBDataType type = s->get_field_type(i);
-                std::cout << s->get_name(i) << "(";
+                DBDataType type = signature->get_field_type(i);
+                std::cout << signature->get_name(i) << "(";
                 std::cout << type.name();
                 std::cout << ")";
             }
             std::cout << std::endl;
             while (reader->hasNextRecord()) {
                 Record* current = reader->getNextRecord();
-                for (int i = 0; i < s->get_size(); ++i) {
+                for (int i = 0; i < signature->get_size(); ++i) {
                     if (i != 0)
                         std::cout << ",";
                     switch(s->get_field_type(i).get_type()) {
@@ -46,7 +46,7 @@ void DBShell::run() {
                         std::cout << current->getDouble(i);
                         break;
                     case DBDataType::VARCHAR:
-                        std::cout << current->getVarchar(i);
+                        std::cout << '\"' << current->getVarchar(i) << '\"';
                         break;
                     }
                 }
