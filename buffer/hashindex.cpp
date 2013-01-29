@@ -114,32 +114,54 @@ void HashIndex::addKey(DBDataValue key, uint32 value) {
     delete[] buffer;
 }
 
-void HashIndex::deleteKey(DBDataValue key, uint32 value) {
+static uint32 find_offset(BufferManager *bm, DBDataValue *key, uint32 value) {
     int hash = get_hash(key);
     char *buffer = new char[300];
     m_bm->read(m_file, hash*2*sizeof(uint32), buffer, 2*sizeof(uint32));
     uint32 start = *((uint32*)buffer);
-    if (!start)
-        return;
+    if (!start) {
+        delete[] buffer;
+        return 0;
+    }
     int bufsize = get_bufsize(key);
     uint32 item_size = bufsize + sizeof(value) + sizeof(uint32)*2;
     for (;;) {
         if (!start) {
-            break;
+            delete[] buffer;
+            return 0;
         }
         m_bm->read(m_file, start, buffer, bufsize);
         if (compare(key, buffer)) {
             if (*((uint32*)(buffer+bufsize)) == value) {
-                // DO FUCKING DELETE HERE
+                delete[] buffer;
+                return start;
             }
         }
 
         start = *((uint32*)(buffer+bufsize+sizeof(value)));
     }
     delete[] buffer;
+    return 0;
+}
+
+void HashIndex::deleteKey(DBDataValue key, uint32 value) {
+    uint32 start = find_offset(m_bm, &key, value);
+    if (!start) {
+        return;
+    }
+    // DELETE IT!1
 }
 
 IndexIterator* HashIndex::findKey(DBDataValue key) {
+    uint32 start = find_offset(m_bm, &key, value);
+    if (!start) {
+        // return kind of fake iterator
+        return (IndexIterator*)0;
+    }
+    // return real iterator
+    return (IndexIterator*)0;
+
+
 }
 
 
