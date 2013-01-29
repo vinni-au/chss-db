@@ -4,7 +4,7 @@
 #include "index.h"
 
 struct NoindexIterator : IndexIterator {
-    NoindexIterator(Index* index, int key);
+    NoindexIterator(Index* index, DBDataValue key);
     Record* getNextRecord();
     bool hasNextRecord();
 
@@ -16,9 +16,9 @@ private:
 struct Noindex : Index {
     Noindex(IndexFile* file, BufferManager* bm, Signature* signature, uint32 table_id, uint32 column) : Index(file, bm, signature, table_id, column) {};
     void createIndex();
-    void addKey(int key, uint32 page);
-    NoindexIterator* findKey(int key);
-    void deleteKey(int key, uint32 page);
+    void addKey(DBDataValue key, uint32 value);
+    NoindexIterator* findKey(DBDataValue key);
+    void deleteKey(DBDataValue key, uint32 value);
 };
 
 #endif // NOINDEX_H

@@ -8,6 +8,7 @@
 
 struct QueryProcessor;
 struct BufferManager;
+struct DBMetaData;
 
 struct DB {
     DB(std::string dir, uint32 pages);

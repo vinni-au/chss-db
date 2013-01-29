@@ -41,7 +41,7 @@ void BTreeindex::createIndex() {
 //        std::cout << "GO" << std::endl;
         Record *cur = m_file->get(i);
 //        std::cout << "Adding" << i << std::endl;
-        addKey(cur->getInt(m_column), i);
+        addKey(cur->get(m_column), i);
         delete cur;
 //        std::cout << "Added" << i << std::endl;
 //        if(i == 9000)
@@ -49,9 +49,9 @@ void BTreeindex::createIndex() {
     }
 }
 
-void BTreeindex::addKey(int key, uint32 page) {
+void BTreeindex::addKey(DBDataValue key, uint32 index) {
 //    std::cout << "addKey" << column << ' ' << page << std::endl;
-    BTreeItem item(key, page);
+    BTreeItem item(key, index);
 
     BTreeVertex* start = new BTreeVertex(m_bm, 0, m_btree_file);
     uint32 root = start->root;
@@ -75,25 +75,22 @@ void BTreeindex::addKey(int key, uint32 page) {
         sv->data[0].value = root;
         delete sv;
 
-        std::cout << "Ok" << std::endl;
         BTree_split_child(s, 0);
-        std::cout << "Splitted" << std::endl;
         BTree_insert_nonfull(s, item);
     } else {
-//        std::cout << "NONFULL" << std::endl;
         BTree_insert_nonfull(root, item);
     }
 
 }
 
-BTreeIterator* BTreeindex::findKey(int key) {
+BTreeIterator* BTreeindex::findKey(DBDataValue key) {
     BTreeVertex* start = new BTreeVertex(m_bm, 0, m_btree_file);
     uint32 root = start->root;
     delete start;
     return new BTreeIterator(this, key, root);
 }
 
-void BTreeindex::deleteKey(int key, uint32 page) {
+void BTreeindex::deleteKey(DBDataValue key, uint32 index) {
 }
 
 void BTreeindex::BTree_insert_nonfull(uint32 u, BTreeItem item) {
@@ -177,7 +174,7 @@ void BTreeindex::BTree_split_child(uint32 u, uint32 index) {
 std::pair<uint32, uint32> BTreeindex::BTree_search(uint32 page, uint32 pos, uint32 key) {
     BTreeVertex vertex(m_bm, page, m_btree_file);
     for(int i = pos; i < vertex.size; ++i) {
-        if((i == 0 || vertex.data[i - 1].key <= key) && (i == vertex.size - 1 || key <= vertex.data[i + 1].key)) {
+        if((i == 0 || vertex.data[i - 1].key < key) && (i == vertex.size - 1 || key < vertex.data[i + 1].key)) {
             if(vertex.isleaf) {
                 return std::make_pair(page, i);
             } else {

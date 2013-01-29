@@ -12,9 +12,9 @@ struct Index {
     Index(IndexFile* file, BufferManager* bm, Signature* signature, uint32 table_id, uint32 column) :
         m_file(file), m_bm(bm), m_signature(signature), m_table_id(table_id), m_column(column) {}
     virtual void createIndex() = 0;
-    virtual void addKey(int key, uint32 page) = 0;
-    virtual IndexIterator* findKey(int key) = 0;
-    virtual void deleteKey(int key, uint32 page) = 0;
+    virtual void addKey(DBDataValue key, uint32 value) = 0;
+    virtual IndexIterator* findKey(DBDataValue key) = 0;
+    virtual void deleteKey(DBDataValue key, uint32 value) = 0;
 
     IndexFile* m_file;
     BufferManager* m_bm;
@@ -24,7 +24,7 @@ struct Index {
 };
 
 struct IndexIterator : IDataReader {
-    IndexIterator(Index* index, int key) : m_index(index), m_key(key) {}
+    IndexIterator(Index* index, DBDataValue key) : m_index(index), m_key(key) {}
     Record* getNextRecord() = 0;
     bool hasNextRecord() = 0;
     Signature* getSignature() {
@@ -32,7 +32,7 @@ struct IndexIterator : IDataReader {
     }
 protected:
     Index* m_index;
-    int m_key;
+    DBDataValue m_key;
 };
 
 #endif // INDEX_H

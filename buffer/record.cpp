@@ -33,6 +33,15 @@ double Record::getDouble(uint32 pos) const {
     return *(double*)(m_data + offset);
 }
 
+DBDataValue Record::get(uint32 pos) const {
+    if(m_signature->get_field_type(pos).get_type() == DBDataType::INT)
+        return DBDataValue(getInt(pos));
+    if(m_signature->get_field_type(pos).get_type() == DBDataType::DOUBLE)
+        return DBDataValue(getDouble(pos));
+    if(m_signature->get_field_type(pos).get_type() == DBDataType::VARCHAR)
+        return DBDataValue(getVarchar(pos));
+}
+
 std::string Record::getVarchar(uint32 pos) const {
     uint32 offset = m_signature->get_offset(pos);
     uint32 size = m_signature->get_field_type(pos).get_size();
