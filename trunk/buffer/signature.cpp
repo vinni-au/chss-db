@@ -29,3 +29,7 @@ uint32 Signature::get_size() const {
 uint32 Signature::get_index(std::string const& name) {
     return m_index[name];
 }
+
+std::string const& Signature::get_name(uint32 pos) const {
+    return m_field_names[pos];
+}

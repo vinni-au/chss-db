@@ -1,7 +1,7 @@
 #ifndef BTREEINDEX_H
 #define BTREEINDEX_H
 
-#include "./global.h"
+#include "../global.h"
 #include "index.h"
 
 struct BTreeItem {
