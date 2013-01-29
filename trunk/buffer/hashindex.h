@@ -3,10 +3,11 @@
 
 #include "./global.h"
 #include "index.h"
+#include <memory.h>
 
 struct HashIndexIterator;
 
-struct HashIndex: Ind   ex {
+struct HashIndex: Index {
     static int const BUCKETS_CNT = 1000033;
     HashIndex(IndexFile* file, BufferManager* bm, Signature* signature, uint32 table_id, uint32 column);
     virtual void createIndex() = 0;
