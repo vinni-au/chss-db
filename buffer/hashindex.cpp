@@ -8,9 +8,9 @@ void HashIndex::createIndex() {
     int32 offset = 0;
     uint32 t = 0;
     for(int i=0;i<BUCKETS_CNT; ++i) {
-        m_bm->write(m_file, offset, &t, sizeof(uint32));
+        m_bm->write(m_index_filename, offset, (char*)&t, sizeof(uint32));
         offset += sizeof(uint32);
-        m_bm->write(m_file, offset, &t, sizeof(uint32));
+        m_bm->write(m_index_filename, offset, (char*)&t, sizeof(uint32));
         offset += sizeof(uint32);
     }
 }
@@ -77,7 +77,7 @@ static bool compare(DBDataValue const &value, char *data) {
 void HashIndex::addKey(DBDataValue key, uint32 value) {
     int hash = get_hash(key, BUCKETS_CNT);
     char *buffer = new char[300];
-    m_bm->read(m_file, hash*2*sizeof(uint32), buffer, 2*sizeof(uint32));
+    m_bm->read(m_index_filename, hash*2*sizeof(uint32), buffer, 2*sizeof(uint32));
     uint32 start = *((uint32*)buffer);
     uint32 finish = *((uint32*)(buffer+sizeof(uint32)));
 
@@ -88,38 +88,38 @@ void HashIndex::addKey(DBDataValue key, uint32 value) {
     uint32 item_size = bufsize + sizeof(value) + sizeof(uint32)*2;
 
     if (finish==0) {
-        m_bm->write(m_file, offset, buffer, bufsize);
-        m_bm->write(m_file, offset+bufsize, (char*)(&value), sizeof(value));
+        m_bm->write(m_index_filename, offset, buffer, bufsize);
+        m_bm->write(m_index_filename, offset+bufsize, (char*)(&value), sizeof(value));
         // prev
-        m_bm->write(m_file, offset+bufsize+sizeof(value), 0, sizeof(uint32));
+        m_bm->write(m_index_filename, offset+bufsize+sizeof(value), 0, sizeof(uint32));
         // next
-        m_bm->write(m_file, offset+bufsize+sizeof(value)+sizeof(uint32), 0, sizeof(uint32));
+        m_bm->write(m_index_filename, offset+bufsize+sizeof(value)+sizeof(uint32), 0, sizeof(uint32));
 
 
-        m_bm->write(m_file, hash*2*sizeof(uint32), offset, sizeof(uint32));
-        m_bm->write(m_file, hash*2*sizeof(uint32)+sizeof(uint32), offset, sizeof(uint32));
+        m_bm->write(m_index_filename, hash*2*sizeof(uint32), (char*)(&offset), sizeof(uint32));
+        m_bm->write(m_index_filename, hash*2*sizeof(uint32)+sizeof(uint32), (char*)(&offset), sizeof(uint32));
     } else {
-        m_bm->write(m_file, finish+bufsize+sizeof(value), (char*)(&offset), sizeof(uint32));
-        m_bm->write(m_file, finish+bufsize+sizeof(value)+sizeof(uint32), (char*)(&offset), sizeof(uint32));
+        m_bm->write(m_index_filename, finish+bufsize+sizeof(value), (char*)(&offset), sizeof(uint32));
+        m_bm->write(m_index_filename, finish+bufsize+sizeof(value)+sizeof(uint32), (char*)(&offset), sizeof(uint32));
 
-        m_bm->write(m_file, hash*2*sizeof(uint32)+sizeof(uint32), (char*)(&offset), sizeof(uint32));
+        m_bm->write(m_index_filename, hash*2*sizeof(uint32)+sizeof(uint32), (char*)(&offset), sizeof(uint32));
 
 
-        m_bm->write(m_file, offset, buffer, bufsize);
-        m_bm->write(m_file, offset+bufsize, (char*)(&value), sizeof(value));
+        m_bm->write(m_index_filename, offset, buffer, bufsize);
+        m_bm->write(m_index_filename, offset+bufsize, (char*)(&value), sizeof(value));
         // prev
-        m_bm->write(m_file, offset+bufsize+sizeof(value), finish, sizeof(uint32));
+        m_bm->write(m_index_filename, offset+bufsize+sizeof(value), (char*)&finish, sizeof(uint32));
         // next
-        m_bm->write(m_file, offset+bufsize+sizeof(value)+sizeof(value), 0, sizeof(uint32));
+        m_bm->write(m_index_filename, offset+bufsize+sizeof(value)+sizeof(value), 0, sizeof(uint32));
     }
     ++table_size;
     delete[] buffer;
 }
 
-static uint32 find_offset(BufferManager *bm, DBDataValue *key, uint32 value) {
+static uint32 find_keyvalue(BufferManager *bm, DBDataValue *key, uint32 value, std::string const &filename) {
     int hash = get_hash(*key, HashIndex::BUCKETS_CNT);
     char *buffer = new char[300];
-    bm->read(m_file, hash*2*sizeof(uint32), buffer, 2*sizeof(uint32));
+    bm->read(filename, hash*2*sizeof(uint32), buffer, 2*sizeof(uint32));
     uint32 start = *((uint32*)buffer);
     if (!start) {
         delete[] buffer;
@@ -131,7 +131,7 @@ static uint32 find_offset(BufferManager *bm, DBDataValue *key, uint32 value) {
             delete[] buffer;
             return 0;
         }
-        bm->read(m_file, start, buffer, bufsize);
+        bm->read(filename, start, buffer, bufsize);
         if (compare(*key, buffer)) {
             if (*((uint32*)(buffer+bufsize)) == value) {
                 delete[] buffer;
@@ -144,8 +144,34 @@ static uint32 find_offset(BufferManager *bm, DBDataValue *key, uint32 value) {
     return 0;
 }
 
+static uint32 find_key(BufferManager *bm, DBDataValue *key, std::string const &filename) {
+    int hash = get_hash(*key, HashIndex::BUCKETS_CNT);
+    char *buffer = new char[300];
+    bm->read(filename, hash*2*sizeof(uint32), buffer, 2*sizeof(uint32));
+    uint32 start = *((uint32*)buffer);
+    if (!start) {
+        delete[] buffer;
+        return 0;
+    }
+    int bufsize = get_bufsize(*key);
+    for (;;) {
+        if (!start) {
+            delete[] buffer;
+            return 0;
+        }
+        bm->read(filename, start, buffer, bufsize);
+        if (compare(*key, buffer)) {
+            delete[] buffer;
+            return start;
+        }
+        start = *((uint32*)(buffer+bufsize+sizeof(uint32)));
+    }
+    delete[] buffer;
+    return 0;
+}
+
 void HashIndex::deleteKey(DBDataValue key, uint32 value) {
-    uint32 start = find_offset(m_bm, &key, value);
+    uint32 start = find_keyvalue(m_bm, &key, value, m_index_filename);
     if (!start) {
         return;
     }
@@ -153,15 +179,13 @@ void HashIndex::deleteKey(DBDataValue key, uint32 value) {
 }
 
 IndexIterator* HashIndex::findKey(DBDataValue key) {
-    uint32 start = find_offset(m_bm, &key);
+    uint32 start = find_key(m_bm, &key, m_index_filename);
     if (!start) {
         // return kind of fake iterator
         return (IndexIterator*)0;
     }
     // return real iterator
     return (IndexIterator*)0;
-
-
 }
 
 
