@@ -5,11 +5,10 @@
 #include "index.h"
 
 struct BTreeItem {
-    DBDataValue key;
     uint32 value;
+    DBDataValue key;
     BTreeItem() {}
-    BTreeItem(DBDataValue _key, uint32 _value) : key(_key), value(_value) {}
-    ~BTreeItem() {}
+    BTreeItem(uint32 _value, DBDataValue _key) : value(_value), key(_key) {}
 };
 
 struct BTreeVertex {
@@ -21,8 +20,10 @@ struct BTreeVertex {
     BufferManager* bm;
     uint32 u;
     std::string file;
+    DBDataType m_type;
 
-    BTreeVertex(BufferManager* _bm, uint32 _u, const std::string& _file);
+    BTreeVertex(BufferManager* _bm, uint32 _u, const std::string& _file, DBDataType type);
+    static uint32 get_capacity(DBDataType type);
     ~BTreeVertex();
 private:
     BTreeVertex(BTreeVertex& src) {}
@@ -30,15 +31,15 @@ private:
 };
 
 struct BTreeIterator : IndexIterator {
-    BTreeIterator(Index* index, DBDataValue key, uint32 root) : IndexIterator(index, key), m_current_vertex(root), m_current_position(0) {}
+    BTreeIterator(Index* index, DBDataValue key, uint32 root) : IndexIterator(index, key) {
+        path.push_back(std::make_pair(root, 0));
+    }
     Record* getNextRecord();
     bool hasNextRecord();
 
 private:
-    uint32 m_current_vertex;
-    uint32 m_current_position;
     Record* current_record;
-    std::vector<uint32> path;
+    std::vector< std::pair<uint32, uint32> > path;
 };
 
 struct BTreeindex : Index {
@@ -53,8 +54,7 @@ private:
     std::pair<uint32, uint32> BTree_search(uint32 page, uint32 pos, uint32 key);
 public:
     static uint32 const HEADER_SIZE = 3 * sizeof(uint32) + sizeof(bool);
-    static uint32 const PAGE_CAPACITY = (PAGESIZE - HEADER_SIZE) / sizeof(BTreeItem);
-private:
+    DBDataType type;
     std::string m_btree_file;
 };
 

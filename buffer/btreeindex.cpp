@@ -1,36 +1,103 @@
 #include "btreeindex.h"
+#include <cstring>
 
-BTreeVertex::BTreeVertex(BufferManager* _bm, uint32 _u, const std::string& _file) : bm(_bm), u(_u), file(_file) {
-    data = new BTreeItem[BTreeindex::PAGE_CAPACITY * sizeof(BTreeItem)];
-    bm->read(file, PAGESIZE * u, (char*)(&root), sizeof(uint32));
-    bm->read(file, PAGESIZE * u + sizeof(uint32), (char*)(&total), sizeof(uint32));
-    bm->read(file, PAGESIZE * u + 2 * sizeof(uint32), (char*)(&size), sizeof(uint32));
-    bm->read(file, PAGESIZE * u + 3 * sizeof(uint32), (char*)(&isleaf), sizeof(bool));
-    bm->read(file, PAGESIZE * u + BTreeindex::HEADER_SIZE, (char*)data, sizeof(BTreeItem) * BTreeindex::PAGE_CAPACITY);
+BTreeVertex::BTreeVertex(BufferManager* _bm, uint32 _u, const std::string& _file, DBDataType type) : bm(_bm), u(_u), file(_file), m_type(type) {
+    char *buffer = new char[PAGESIZE];
+    bm->read(file, PAGESIZE * u, buffer, PAGESIZE);
+    root = *(int*)(buffer);
+    total = *(int*)(buffer + sizeof(uint32));
+    size = *(int*)(buffer + 2 * sizeof(uint32));
+    isleaf = *(bool*)(buffer + 3 * sizeof(uint32));
+    delete[] buffer;
+    uint32 capacity = get_capacity(type);
+    uint32 itemsize = sizeof(uint32) + type.get_size();
+    data = new BTreeItem[capacity];
+    for(uint32 i = 0; i < capacity; ++i) {
+        uint32 value = *(uint32*)(buffer + BTreeindex::HEADER_SIZE + itemsize * i);
+        if(type.get_type() == DBDataType::INT) {
+            int key = *(int*)(buffer + BTreeindex::HEADER_SIZE + itemsize * i + sizeof(uint32));
+            data[i] = BTreeItem(value, DBDataValue(key));
+        } else if(type.get_type() == DBDataType::DOUBLE) {
+            double key = *(double*)(buffer + BTreeindex::HEADER_SIZE + itemsize * i + sizeof(uint32));
+            data[i] = BTreeItem(value, DBDataValue(key));
+        } else if(type.get_type() == DBDataType::VARCHAR) {
+            std::string key(buffer + BTreeindex::HEADER_SIZE + itemsize * i + sizeof(uint32), buffer + BTreeindex::HEADER_SIZE + itemsize * i + sizeof(uint32) + type.get_size());
+            data[i] = BTreeItem(value, DBDataValue(key));
+        }
+    }
+}
+
+uint32 BTreeVertex::get_capacity(DBDataType type) {
+    return PAGESIZE / type.get_type();
 }
 
 BTreeVertex::~BTreeVertex() {
-    bm->write(file, PAGESIZE * u, (char*)(&root), sizeof(uint32));
-    bm->write(file, PAGESIZE * u + sizeof(uint32), (char*)(&total), sizeof(uint32));
-    bm->write(file, PAGESIZE * u + 2 * sizeof(uint32), (char*)(&size), sizeof(uint32));
-    bm->write(file, PAGESIZE * u + 3 * sizeof(uint32), (char*)(&isleaf), sizeof(bool));
-    bm->write(file, PAGESIZE * u + BTreeindex::HEADER_SIZE, (char*)data, sizeof(BTreeItem) * BTreeindex::PAGE_CAPACITY);
+    uint32 capacity = get_capacity(m_type);
+    char *buffer = new char[PAGESIZE];
+    *(int*)(buffer) = root;
+    *(int*)(buffer + sizeof(uint32)) = total;
+    *(int*)(buffer + 2 * sizeof(uint32)) = size;
+    *(bool*)(buffer + 3 * sizeof(uint32)) = isleaf;
+    uint32 itemsize = sizeof(uint32) + m_type.get_size();
+    for(uint32 i = 0; i < capacity; ++i) {
+        *(uint32*)(buffer + BTreeindex::HEADER_SIZE + itemsize * i) = data[i].value;
+        if(m_type.get_type() == DBDataType::INT) {
+            *(int*)(buffer + BTreeindex::HEADER_SIZE + itemsize * i + sizeof(uint32)) = data[i].key.intValue();
+        } else if(m_type.get_type() == DBDataType::DOUBLE) {
+            *(double*)(buffer + BTreeindex::HEADER_SIZE + itemsize * i + sizeof(uint32)) = data[i].key.doubleValue();
+        } else if(m_type.get_type() == DBDataType::VARCHAR) {
+            memcpy(buffer + BTreeindex::HEADER_SIZE + itemsize * i + sizeof(uint32), data[i].key.stringValue().c_str(), m_type.get_size());
+        }
+    }
+    bm->write(file, PAGESIZE * u, buffer, PAGESIZE);
+    delete[] buffer;
     delete[] data;
 }
 
 Record* BTreeIterator::getNextRecord() {
-
+    if(hasNextRecord()) {
+        Record* result = current_record;
+        current_record = 0;
+        return result;
+    }
+    return 0;
 }
 
 bool BTreeIterator::hasNextRecord() {
-
+    if(!current_record) {
+        while(!path.empty()) {
+            uint32& current_vertex = path[path.size() - 1].first;
+            uint32& current_position = path[path.size() - 1].second;
+            BTreeVertex cur(m_index->m_bm, current_vertex, ((BTreeindex*)m_index)->m_btree_file, m_key.type());
+            if(cur.isleaf) {
+                while(current_position < cur.size && cur.data[current_position].key != m_key) {
+                    ++current_position;
+                }
+                if(current_position < cur.size) {
+                    current_record = m_index->m_file->get(cur.data[current_position++].value);
+                    break;
+                }
+            } else {
+                while(current_position < cur.size) {
+                    if((cur.data[current_position].key <= m_key) && (m_key <= cur.data[current_position].key)) {
+                        ++current_position;
+                        path.push_back(std::make_pair(cur.data[current_position].value, 0));
+                        break;
+                    }
+                    ++current_position;
+                }
+            }
+            path.pop_back();
+        }
+    }
+    return current_record != 0;
 }
 
-BTreeindex::BTreeindex(IndexFile* file, BufferManager* bm, Signature* signature, uint32 table_id, uint32 column) : Index(file, bm, signature, table_id, column) {
+BTreeindex::BTreeindex(IndexFile* file, BufferManager* bm, Signature* signature, uint32 table_id, uint32 column) : Index(file, bm, signature, table_id, column), type(signature->get_field_type(column)) {
 }
 
 void BTreeindex::createIndex() {
-    BTreeVertex* start = new BTreeVertex(m_bm, 0, m_btree_file);
+    BTreeVertex* start = new BTreeVertex(m_bm, 0, m_btree_file, type);
     start->isleaf = true;
     start->total = 1;
     start->size = 0;
@@ -51,25 +118,25 @@ void BTreeindex::createIndex() {
 
 void BTreeindex::addKey(DBDataValue key, uint32 index) {
 //    std::cout << "addKey" << column << ' ' << page << std::endl;
-    BTreeItem item(key, index);
+    BTreeItem item(index, key);
 
-    BTreeVertex* start = new BTreeVertex(m_bm, 0, m_btree_file);
+    BTreeVertex* start = new BTreeVertex(m_bm, 0, m_btree_file, type);
     uint32 root = start->root;
     delete start;
 
-    BTreeVertex* vroot = new BTreeVertex(m_bm, root, m_btree_file);
+    BTreeVertex* vroot = new BTreeVertex(m_bm, root, m_btree_file, type);
     uint32 current_size = vroot->size;
     delete vroot;
 
-    if(current_size == PAGE_CAPACITY) {
+    if(current_size == BTreeVertex::get_capacity(type)) {
         std::cout << "FULL" << std::endl;
 
-        BTreeVertex* start = new BTreeVertex(m_bm, 0, m_btree_file);
+        BTreeVertex* start = new BTreeVertex(m_bm, 0, m_btree_file, type);
         uint32 s = start->total++;
         start->root = s;
         delete start;
 
-        BTreeVertex* sv = new BTreeVertex(m_bm, s, m_btree_file);
+        BTreeVertex* sv = new BTreeVertex(m_bm, s, m_btree_file, type);
         sv->isleaf = false;
         sv->size = 1;
         sv->data[0].value = root;
@@ -84,7 +151,7 @@ void BTreeindex::addKey(DBDataValue key, uint32 index) {
 }
 
 BTreeIterator* BTreeindex::findKey(DBDataValue key) {
-    BTreeVertex* start = new BTreeVertex(m_bm, 0, m_btree_file);
+    BTreeVertex* start = new BTreeVertex(m_bm, 0, m_btree_file, type);
     uint32 root = start->root;
     delete start;
     return new BTreeIterator(this, key, root);
@@ -95,7 +162,7 @@ void BTreeindex::deleteKey(DBDataValue key, uint32 index) {
 
 void BTreeindex::BTree_insert_nonfull(uint32 u, BTreeItem item) {
 //    std::cout << "BTreeInsertNonfull" << u << std::endl;
-    BTreeVertex* vertex = new BTreeVertex(m_bm, u, m_btree_file);
+    BTreeVertex* vertex = new BTreeVertex(m_bm, u, m_btree_file, type);
     int i = vertex->size - 1;
     if(vertex->isleaf) {
 //        std::cout << u << std::endl;
@@ -113,14 +180,14 @@ void BTreeindex::BTree_insert_nonfull(uint32 u, BTreeItem item) {
         }
         ++i;
 
-        BTreeVertex* current_vertex = new BTreeVertex(m_bm, vertex->data[i].value, m_btree_file);
+        BTreeVertex* current_vertex = new BTreeVertex(m_bm, vertex->data[i].value, m_btree_file, type);
         uint32 current_size = current_vertex->size;
         delete current_vertex;
 
-        if(current_size == PAGE_CAPACITY) {
+        if(current_size == BTreeVertex::get_capacity(type)) {
             delete vertex;
             BTree_split_child(u, i);
-            vertex = new BTreeVertex(m_bm, u, m_btree_file);
+            vertex = new BTreeVertex(m_bm, u, m_btree_file, type);
             if(item.key > vertex->data[i].key) {
                 ++i;
             }
@@ -135,20 +202,20 @@ void BTreeindex::BTree_insert_nonfull(uint32 u, BTreeItem item) {
 
 void BTreeindex::BTree_split_child(uint32 u, uint32 index) {
     std::cout << "BTree split child" << index << ' ' << std::endl;
-    BTreeVertex vertex(m_bm, u, m_btree_file);
+    BTreeVertex vertex(m_bm, u, m_btree_file, type);
 
-    BTreeVertex* start = new BTreeVertex(m_bm, 0, m_btree_file);
+    BTreeVertex* start = new BTreeVertex(m_bm, 0, m_btree_file, type);
     uint32 z = start->total;
     ++start->total;
     delete start;
 
     uint32 y = vertex.data[index].value;
-    BTreeVertex vy(m_bm, y, m_btree_file);
-    BTreeVertex vz(m_bm, z, m_btree_file);
+    BTreeVertex vy(m_bm, y, m_btree_file, type);
+    BTreeVertex vz(m_bm, z, m_btree_file, type);
     vz.isleaf = vy.isleaf;
 
-    uint32 t1 = PAGE_CAPACITY / 2;
-    uint32 t2 = PAGE_CAPACITY - t1;
+    uint32 t1 = BTreeVertex::get_capacity(type) / 2;
+    uint32 t2 = BTreeVertex::get_capacity(type) - t1;
 
     for(int i = 0; i < t2; ++i) {
         vz.data[i] = vy.data[i + t1];
@@ -170,18 +237,3 @@ void BTreeindex::BTree_split_child(uint32 u, uint32 index) {
     vertex.data[index].key = vy.data[t1].key;
     ++vertex.size;
 }
-
-std::pair<uint32, uint32> BTreeindex::BTree_search(uint32 page, uint32 pos, uint32 key) {
-    BTreeVertex vertex(m_bm, page, m_btree_file);
-    for(int i = pos; i < vertex.size; ++i) {
-        if((i == 0 || vertex.data[i - 1].key < key) && (i == vertex.size - 1 || key < vertex.data[i + 1].key)) {
-            if(vertex.isleaf) {
-                return std::make_pair(page, i);
-            } else {
-                return BTree_search(vertex.data[i].value, 0, key);
-            }
-        }
-    }
-    return std::make_pair(-1, -1);
-}
-
