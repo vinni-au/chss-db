@@ -27,10 +27,8 @@ typedef unsigned long long       pageid_t;
 
 
 struct DBDataType {
-private:
     int m_type;
     int m_len;
-public:
     static int const VARCHAR = 0;
     static int const INT = 1;
     static int const DOUBLE = 2;
