@@ -15,10 +15,12 @@ struct HashIndex: Index {
     virtual IndexIterator* findKey(DBDataValue key) = 0;
     virtual void deleteKey(DBDataValue key, uint32 value) = 0;
 
+    int table_size;
+
 };
 
 struct HashIndexIterator : IndexIterator {
-    HashIndexIterator(Index* index, int key);
+    HashIndexIterator(Index* index, DBDataValue key);
     Record* getNextRecord() = 0;
     bool hasNextRecord() = 0;
     Signature* getSignature() {

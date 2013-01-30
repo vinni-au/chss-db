@@ -2,14 +2,15 @@
 
 HashIndex::HashIndex(IndexFile* file, BufferManager* bm, Signature* signature, uint32 table_id, uint32 column) : Index(file, bm, signature, table_id, column), table_size(0) {}
 
-HashIndexIterator::HashIndexIterator(Index *index, int key): IndexIterator(index, key) {}
+HashIndexIterator::HashIndexIterator(Index *index, DBDataValue key): IndexIterator(index, key) {}
 
 void HashIndex::createIndex() {
     int32 offset = 0;
+    uint32 t = 0;
     for(int i=0;i<BUCKETS_CNT; ++i) {
-        m_bm->write(m_file, offset, 0, sizeof(uint32));
+        m_bm->write(m_file, offset, &t, sizeof(uint32));
         offset += sizeof(uint32);
-        m_bm->write(m_file, offset, 0, sizeof(uint32));
+        m_bm->write(m_file, offset, &t, sizeof(uint32));
         offset += sizeof(uint32);
     }
 }
@@ -33,12 +34,12 @@ static int32 get_hash(double d) {
 
 static int32 get_hash(DBDataValue const &key, int mod) {
     int32 hash = 0;
-    if (key.type()==DBDataType::INT) {
-        hash = get_hash(key.stringValue());
-    } else if (key.type()==DBDataType::VARCHAR) {
-        hash = get_hash(key.intValue());
-    } else if (key.type()==DBDataType::DOUBLE) {
-        hash = get_hash(key.doubleValue());
+    if (key.type().get_type()==DBDataType::INT) {
+//        hash = get_hash(key.stringValue());
+    } else if (key.type().get_type()==DBDataType::VARCHAR) {
+//        hash = get_hash(key.intValue());
+    } else if (key.type().get_type()==DBDataType::DOUBLE) {
+//        hash = get_hash(key.doubleValue());
     }
     hash%=mod;
     hash+=mod;
@@ -48,16 +49,18 @@ static int32 get_hash(DBDataValue const &key, int mod) {
 
 static int get_bufsize(DBDataValue const &key) {
     int bufsize = 0;
-    if (key.type()==DBDataType::INT) {
+    char *buffer = new char[300];
+    if (key.type().get_type()==DBDataType::INT) {
         bufsize = sizeof(int);
         *((int*)buffer) = key.intValue();
-    } else if (key.type()==DBDataType::DOUBLE) {
+    } else if (key.type().get_type()==DBDataType::DOUBLE) {
         bufsize = sizeof(double);
         *((double*)buffer) = key.doubleValue();
     } else {
         bufsize = key.type().m_len;
         memcpy(buffer, key.stringValue().c_str(), key.type().m_len);
     }
+    delete[] buffer;
     return bufsize;
 }
 
@@ -72,14 +75,13 @@ static bool compare(DBDataValue const &value, char *data) {
 }
 
 void HashIndex::addKey(DBDataValue key, uint32 value) {
-    int hash = get_hash(key);
+    int hash = get_hash(key, BUCKETS_CNT);
     char *buffer = new char[300];
     m_bm->read(m_file, hash*2*sizeof(uint32), buffer, 2*sizeof(uint32));
     uint32 start = *((uint32*)buffer);
-    uint32 finish = *((uint32*)(buffer+sizeof(uint32));
+    uint32 finish = *((uint32*)(buffer+sizeof(uint32)));
 
     int bufsize = get_bufsize(key);
-    uint32 finish = *((uint32*)(buffer+sizeof(uint32)));
 
     uint32 offset = 2*sizeof(uint32)*BUCKETS_CNT + table_size*(bufsize+sizeof(value)+sizeof(uint32)*2);
 
@@ -115,29 +117,27 @@ void HashIndex::addKey(DBDataValue key, uint32 value) {
 }
 
 static uint32 find_offset(BufferManager *bm, DBDataValue *key, uint32 value) {
-    int hash = get_hash(key);
+    int hash = get_hash(*key, HashIndex::BUCKETS_CNT);
     char *buffer = new char[300];
-    m_bm->read(m_file, hash*2*sizeof(uint32), buffer, 2*sizeof(uint32));
+    bm->read(m_file, hash*2*sizeof(uint32), buffer, 2*sizeof(uint32));
     uint32 start = *((uint32*)buffer);
     if (!start) {
         delete[] buffer;
         return 0;
     }
-    int bufsize = get_bufsize(key);
-    uint32 item_size = bufsize + sizeof(value) + sizeof(uint32)*2;
+    int bufsize = get_bufsize(*key);
     for (;;) {
         if (!start) {
             delete[] buffer;
             return 0;
         }
-        m_bm->read(m_file, start, buffer, bufsize);
-        if (compare(key, buffer)) {
+        bm->read(m_file, start, buffer, bufsize);
+        if (compare(*key, buffer)) {
             if (*((uint32*)(buffer+bufsize)) == value) {
                 delete[] buffer;
                 return start;
             }
         }
-
         start = *((uint32*)(buffer+bufsize+sizeof(value)));
     }
     delete[] buffer;
@@ -153,7 +153,7 @@ void HashIndex::deleteKey(DBDataValue key, uint32 value) {
 }
 
 IndexIterator* HashIndex::findKey(DBDataValue key) {
-    uint32 start = find_offset(m_bm, &key, value);
+    uint32 start = find_offset(m_bm, &key);
     if (!start) {
         // return kind of fake iterator
         return (IndexIterator*)0;
@@ -167,7 +167,6 @@ IndexIterator* HashIndex::findKey(DBDataValue key) {
 
 Record* HashIndexIterator::getNextRecord() {
     return (Record*)0;
-
 }
 
 bool HashIndexIterator::hasNextRecord() {
