@@ -24,7 +24,7 @@ void DBShell::run() {
         delete q;
         if (reader) {
             Signature* signature = reader->getSignature();
-            for (int i = 0; i < s->get_size(); ++i) {
+            for (int i = 0; i < signature->get_size(); ++i) {
                 if (i != 0)
                     std::cout << ",";
                 DBDataType type = signature->get_field_type(i);
@@ -38,7 +38,7 @@ void DBShell::run() {
                 for (int i = 0; i < signature->get_size(); ++i) {
                     if (i != 0)
                         std::cout << ",";
-                    switch(s->get_field_type(i).get_type()) {
+                    switch(signature->get_field_type(i).get_type()) {
                     case DBDataType::INT:
                         std::cout << current->getInt(i);
                         break;

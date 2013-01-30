@@ -361,9 +361,9 @@ Query* Parser::p_create() {
             result = 0;
         }
         return result;
-    } else if (symbol == Lex_index || lex == Lex_unique) {
+    } else if (symbol == Lex_index || symbol == Lex_unique) {
         bool needUnique = false;
-        if (lex == Lex_unique) {
+        if (symbol == Lex_unique) {
             accept(Lex_unique);
             needUnique = true;
         }
