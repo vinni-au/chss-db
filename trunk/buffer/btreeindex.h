@@ -55,7 +55,6 @@ private:
 public:
     static uint32 const HEADER_SIZE = 3 * sizeof(uint32) + sizeof(bool);
     DBDataType type;
-    std::string m_btree_file;
 };
 
 #endif // BTREEINDEX_H
