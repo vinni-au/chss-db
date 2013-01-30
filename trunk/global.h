@@ -132,18 +132,38 @@ struct DBDataValue {
     DBDataType const &type() const
     {   return m_type;  }
 
-    bool operator == (const DBDataValue& value) {
+    bool operator < (const DBDataValue& value) const {
         if(m_type.get_type() != value.m_type.get_type())
             return false;
         if(m_type.get_type() == DBDataType::INT) {
-            return m_int == value.m_int;
+            return m_int < value.m_int;
         }
         if(m_type.get_type() == DBDataType::DOUBLE) {
-            return m_double == value.m_double;
+            return m_double < value.m_double;
         }
         if(m_type.get_type() == DBDataType::VARCHAR) {
-            return m_string == value.m_string;
+            return m_string < value.m_string;
         }
+    }
+
+    bool operator > (const DBDataValue& value) const {
+        return (value < *this);
+    }
+
+    bool operator == (const DBDataValue& value) const {
+        return (!(*this < value) && !(value < *this));
+    }
+
+    bool operator != (const DBDataValue& value) const {
+        return !(*this == value);
+    }
+
+    bool operator <= (const DBDataValue& value) const {
+        return (*this < value) || (*this == value);
+    }
+
+    bool operator >= (const DBDataValue& value) const {
+        return (*this > value) || (*this == value);
     }
 
 protected:
