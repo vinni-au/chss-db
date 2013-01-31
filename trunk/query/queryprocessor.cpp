@@ -53,7 +53,7 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
         file->create();
         return new MessageDataReader(std::string("OK"));
     } else if (query->type() == Query::Select) {
-        std::cout << "SELECT" << std::endl;
+        std::cout << "Select" << std::endl;
         SelectQuery* q = static_cast<SelectQuery*>(query);
         std::string tablename = q->tablename();
         if(!meta->exist_table(tablename)) {
@@ -65,11 +65,10 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
         if(t->get_file() == 0) {
             t->set_file(new IndexFile(m_db->buffer(), index, t->makeSignature()));
         }
-        std::cout << "GO" << std::endl;
         if(!q->condition().first.empty()) {
             std::pair< std::string, DBDataValue> cond = q->condition();
             uint32 column = signature->get_index(cond.first);
-            return t->get_file()->select(column, cond.second, 1);
+            return t->get_file()->select(column, cond.second);
         } else {
             return new FileIterator(t->get_file());
         }
@@ -87,7 +86,7 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
         }
         Signature* signature = t->makeSignature();
         uint32 column = signature->get_index(q->indexname());
-        t->get_file()->createIndex(column, 1);
+        t->get_file()->createIndex(column);
     } else if (query->type() == Query::Insert) {
         std::cout << "Insert" << std::endl;
         InsertQuery* q = static_cast<InsertQuery*>(query);
@@ -121,6 +120,43 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
         file->add(&record);
         delete signature;
     } else if (query->type() == Query::Delete) {
+        std::cout << "Delete" << std::endl;
+        DeleteQuery* q = static_cast<DeleteQuery*>(query);
+        std::string tablename = q->tablename();
+        if(!meta->exist_table(tablename)) {
+            return new MessageDataReader("Table doesn't exist");
+        }
+        uint32 index = meta->get_table_index(tablename);
+        Table* t = meta->get_table(index);
+        Signature* signature = t->makeSignature();
+        if(t->get_file() == 0) {
+            t->set_file(new IndexFile(m_db->buffer(), index, t->makeSignature()));
+        }
+        uint32 cnt = 0;
+        std::pair< std::string, DBDataValue> cond = q->condition();
+        while(true) {
+            IDataReader* data;
+            if(cond.first.empty()) {
+                uint32 column = signature->get_index(cond.first);
+                data = t->get_file()->select(column, cond.second);
+            } else {
+                data = new FileIterator(t->get_file());
+            }
+            if(!data->hasNextRecord()) {
+                delete data;
+                break;
+            }
+            Record* record = data->getNextRecord();
+            uint32 position = record->getPosition();
+            for(uint32 i = 0; i < signature->get_size(); ++i) {
+                t->get_file()->remove(i, position, record->get(i));
+            }
+            delete record;
+            delete data;
+            ++cnt;
+        }
+        delete signature;
+        return new MessageDataReader("Affected rows: " + int_to_string(cnt));
     } else if (query->type() == Query::Update) {
         std::cout << "Update" << std::endl;
         UpdateQuery* q = static_cast<UpdateQuery*>(query);
@@ -134,28 +170,32 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
         if(t->get_file() == 0) {
             t->set_file(new IndexFile(m_db->buffer(), index, t->makeSignature()));
         }
-        IDataReader* data;
-        if(!q->condition().first.empty()) {
-            std::pair< std::string, DBDataValue> cond = q->condition();
-            uint32 column = signature->get_index(cond.first);
-            data = t->get_file()->select(column, cond.second, 1);
-        } else {
-            data = new FileIterator(t->get_file());
-        }
         uint32 cnt = 0;
-        while(data->hasNextRecord()) {
+        while(true) {
+            IDataReader* data;
+            if(!q->condition().first.empty()) {
+                std::pair< std::string, DBDataValue> cond = q->condition();
+                uint32 column = signature->get_index(cond.first);
+                data = t->get_file()->select(column, cond.second);
+            } else {
+                data = new FileIterator(t->get_file());
+            }
+            if(!data->hasNextRecord()) {
+                delete data;
+                break;
+            }
             Record* record = data->getNextRecord();
             uint32 position = record->getPosition();
             for(uint32 i = 0; i < q->values().size(); ++i) {
                 uint32 column = signature->get_index(q->values()[i].first);
-                std::cout << "Set " << column << " " << q->values()[i].second.doubleValue() << std::endl;
+                t->get_file()->update(column, position, record->get(column), q->values()[i].second);
                 record->set(column, q->values()[i].second);
             }
             t->get_file()->set(position, record);
             delete record;
+            delete data;
             ++cnt;
         }
-        delete data;
         delete signature;
         return new MessageDataReader("Affected rows: " + int_to_string(cnt));
     }
