@@ -384,7 +384,8 @@ Query* Parser::p_create() {
             } else if (symbol == Lex_desc) {
                 accept(Lex_desc);
                 result->m_cols.push_back(make_pair(col, false));
-            }
+            } else
+                result->m_cols.push_back(make_pair(col, true));
 
             if (symbol == Lex_Comma)
                 nextsym();

@@ -1,7 +1,7 @@
 #ifndef HASHINDEX_H
 #define HASHINDEX_H
 
-#include "./global.h"
+#include "../global.h"
 #include "index.h"
 #include <memory.h>
 
