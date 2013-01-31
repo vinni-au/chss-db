@@ -22,7 +22,8 @@ void DBShell::run() {
         Parser parser(query);
         Query* q = parser.parse();
         IDataReader* reader = m_db->queryProcessor()->runQuery(q);
-        delete q;
+        if (q != 0)
+            delete q;
         if (reader) {
             Signature* signature = reader->getSignature();
             for (int i = 0; i < signature->get_size(); ++i) {
