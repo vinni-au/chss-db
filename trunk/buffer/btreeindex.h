@@ -31,7 +31,7 @@ private:
 };
 
 struct BTreeIterator : IndexIterator {
-    BTreeIterator(Index* index, DBDataValue key, uint32 root) : IndexIterator(index, key) {
+    BTreeIterator(Index* index, DBDataValue key, uint32 root) : IndexIterator(index, key), current_record(0) {
         path.push_back(std::make_pair(root, 0));
     }
     Record* getNextRecord();

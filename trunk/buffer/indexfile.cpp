@@ -20,6 +20,7 @@ Record* IndexFile::get(uint32 index) const {
 }
 
 void IndexFile::set(uint32 index, Record* record) const {
+    std::cout << "setting" << record->getDouble(2) << std::endl;
     m_bm->write(m_table_filename, TABLE_HEADER_SIZE + m_record_size * index, record->get_data_pointer(), m_record_size);
 }
 
