@@ -9,13 +9,20 @@
 #include <vector>
 #include <fstream>
 
+enum IndexType {
+    NOINDEX,
+    HASHINDEX,
+    TREEINDEX
+};
 
 struct Column {
 private:
     DBDataType m_type;
     std::string m_name;
 public:
-    Column(DBDataType type, std::string name): m_type(type), m_name(name) { }
+    IndexType indextype;
+
+    Column(DBDataType type, std::string name, IndexType indextype = NOINDEX): m_type(type), m_name(name), indextype(indextype) { }
     Column() { }
     DBDataType get_type() const {
         return m_type;
