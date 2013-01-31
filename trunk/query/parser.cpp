@@ -37,8 +37,17 @@ Parser::Parser(const std::string &source)
       negative(false)
 {
     if (keywordtable.size() == 0) {
-        for (int i = 0; i < sizeof(lexems)/sizeof(ltable); ++i)
+        for (int i = 0; i < sizeof(lexems)/sizeof(ltable); ++i) {
             keywordtable[lexems[i].lexem] = lexems[i].code;
+            keywordtable_r[lexems[i].code] = lexems[i].lexem;
+        }
+        keywordtable_r[Lex_Ident] = "identifier";
+        keywordtable_r[Lex_Star] = "*";
+        keywordtable_r[Lex_Lparen] = "(";
+        keywordtable_r[Lex_Rparen] = ")";
+        keywordtable_r[Lex_Semicolon] = ":";
+        keywordtable_r[Lex_Comma] = ",";
+        keywordtable_r[Lex_eq] = "=";
     }
 }
 
@@ -171,6 +180,8 @@ Query* Parser::parse() {
 
     if (symbol == Lex_delete)
         return p_delete();
+
+    errormsg = "CREATE, SELECT, INSERT, UPDATE or DELETE expected";
 
     return 0;
 }
@@ -328,6 +339,9 @@ Query* Parser::p_create() {
         accept(Lex_Ident);
         accept(Lex_Lparen);
 
+        if (symbol != Lex_Ident)
+            errormsg = "identifier expected";
+
         while (symbol == Lex_Ident) {
             std::pair<std::string, DBDataType> col = make_pair(ident, DBDataType());
             accept(Lex_Ident);
@@ -409,6 +423,7 @@ Query* Parser::p_create() {
         }
         return result;
     }
+    errormsg = "TABLE or [UNIQUE] INDEX expected";
     return 0;
 }
 
@@ -472,10 +487,13 @@ std::vector< std::pair<std::string, DBDataValue> > Parser::p_valueslist() {
 }
 
 bool Parser::accept(int symbolexpected) {
+    if (hasErrors)
+        return false;
     if (symbol == symbolexpected) {
         nextsym();
         return true;
     }
     hasErrors = true;
+    errormsg = keywordtable_r[symbolexpected] + " expected";
     return false;
 }

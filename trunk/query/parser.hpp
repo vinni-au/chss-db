@@ -7,6 +7,14 @@
 
 struct Parser
 {
+    Parser(std::string const& source);
+
+    Query* parse();
+
+    std::string const& error()
+    {   return errormsg;    }
+
+private:
     enum Lexem {
         Lex_select,
         Lex_create,
@@ -49,23 +57,14 @@ struct Parser
         int code;
     };
 
+    std::string errormsg;
+
     static ltable lexems[];
 
     std::map<std::string, int> keywordtable;
+    std::map<int, std::string> keywordtable_r;
 
-    Parser(std::string const& source);
     int searchKeyword(std::string const& word);
-
-    Query* parse();
-    Query* p_create();
-    InsertQuery* p_insert();
-    SelectQuery* p_select();
-    UpdateQuery* p_update();
-    DeleteQuery* p_delete();
-
-    std::vector< std::pair<std::string, DBDataValue> > p_valueslist();
-    DBDataValue p_value();
-    DBDataType p_type();
 
     void nextch(bool ingoreCase = true);
     void nextsym();
@@ -81,6 +80,16 @@ struct Parser
     double doubleconst;
     std::string stringconst;
     std::string source;
+
+    Query* p_create();
+    InsertQuery* p_insert();
+    SelectQuery* p_select();
+    UpdateQuery* p_update();
+    DeleteQuery* p_delete();
+
+    std::vector< std::pair<std::string, DBDataValue> > p_valueslist();
+    DBDataValue p_value();
+    DBDataType p_type();
 };
 
 #endif // PARSER_HPP
