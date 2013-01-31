@@ -10,10 +10,9 @@ IndexFile::IndexFile(BufferManager* bm, uint32 table_id, Signature* signature) :
     m_table_id(table_id), m_table_filename("table" + int_to_string(table_id) + ".db"), m_signature(signature), m_record_size(signature->get_size_in_bytes()) {
     for(uint32 i = 0; i < signature->get_size(); ++i) {
         Index* current_index;
-        uint32 index_type = 1;
-        if(index_type == 1) {
+        if(signature->get_index_type(i) == TREEINDEX) {
             current_index = new BTreeindex(this, m_bm, m_signature, m_table_id, i);
-        } else if(index_type == 2) {
+        } else if(signature->get_index_type(i) == HASHINDEX) {
             current_index = new HashIndex(this, m_bm, m_signature, m_table_id, i);
         } else {
             current_index = new Noindex(this, m_bm, m_signature, m_table_id, i);
@@ -62,7 +61,17 @@ uint32 IndexFile::get_size() const {
     return size;
 }
 
-void IndexFile::createIndex(uint32 column) {
+void IndexFile::createIndex(uint32 column, IndexType type) {
+    delete indexes[column];
+    Index* current_index;
+    if(type == TREEINDEX) {
+        current_index = new BTreeindex(this, m_bm, m_signature, m_table_id, i);
+    } else if(type == HASHINDEX) {
+        current_index = new HashIndex(this, m_bm, m_signature, m_table_id, i);
+    } else {
+        current_index = new Noindex(this, m_bm, m_signature, m_table_id, i);
+    }
+    indexes[column] = current_index;
     indexes[column]->createIndex();
 }
 

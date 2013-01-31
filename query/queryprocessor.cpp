@@ -86,6 +86,7 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
         }
         Signature* signature = t->makeSignature();
         uint32 column = signature->get_index(q->indexname());
+        t->m_columns[column]
         t->get_file()->createIndex(column);
     } else if (query->type() == Query::Insert) {
         std::cout << "Insert" << std::endl;
