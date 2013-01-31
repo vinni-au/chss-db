@@ -5,6 +5,7 @@
 struct Record {
 public:
     Record(uint32 position, Signature* signature);
+    ~Record();
     void setInt(uint32 pos, int value);
     void setDouble(uint32 pos, double value);
     void setVarchar(uint32 pos, std::string value);
@@ -16,6 +17,8 @@ public:
     DBDataValue get(uint32 pos) const;
     std::string getVarchar(uint32 pos) const;
 private:
+    Record(const Record& src);
+    Record& operator = (const Record& src);
     uint32 m_position;
     Signature* m_signature;
     char* m_data;

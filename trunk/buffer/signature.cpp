@@ -27,7 +27,9 @@ uint32 Signature::get_size() const {
 }
 
 uint32 Signature::get_index(std::string const& name) {
-    return m_index[name];
+    if(m_index.count(name))
+        return m_index[name];
+    return -1;
 }
 
 std::string const& Signature::get_name(uint32 pos) const {

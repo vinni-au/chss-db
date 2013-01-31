@@ -11,6 +11,7 @@ BTreeVertex::BTreeVertex(BufferManager* _bm, uint32 _u, const std::string& _file
     uint32 capacity = get_capacity(type);
     uint32 itemsize = sizeof(uint32) + type.get_size();
     data = new BTreeItem[capacity];
+    size = std::min(size, capacity);
     for(uint32 i = 0; i < size; ++i) {
         uint32 value = *(uint32*)(buffer + BTreeindex::HEADER_SIZE + itemsize * i);
         if(type.get_type() == DBDataType::INT) {
@@ -112,19 +113,18 @@ void BTreeindex::createIndex() {
     start->size = 0;
     start->root = 0;
     delete start;
+
     uint32 size = m_file->get_size();
     for(uint32 i = 0; i < size; ++i) {
         Record *cur = m_file->get(i);
-//        std::cout << "Adding" << i << std::endl;
         addKey(cur->get(m_column), i);
         delete cur;
-//        std::cout << "Added" << i << std::endl;
-//        if(i == 1000)
-//            break;
     }
-//    start = new BTreeVertex(m_bm, 0, m_index_filename, type);
-//    uint32 total = start->total;
-//    delete start;
+
+    start = new BTreeVertex(m_bm, 0, m_index_filename, type);
+    uint32 total = start->total;
+    delete start;
+
 //    for(uint32 u = 0; u < total; ++u) {
 //        BTreeVertex* cur = new BTreeVertex(m_bm, u, m_index_filename, type);
 //        std::cout << "Vertex" << u << ": " << cur->size << std::endl;
@@ -146,6 +146,7 @@ void BTreeindex::addKey(DBDataValue key, uint32 index) {
     BTreeVertex* vroot = new BTreeVertex(m_bm, root, m_index_filename, type);
     uint32 current_size = vroot->size;
     delete vroot;
+
     if(current_size == BTreeVertex::get_capacity(type)) {
 //        std::cout << "FULL" << std::endl;
 
@@ -169,6 +170,7 @@ void BTreeindex::addKey(DBDataValue key, uint32 index) {
 }
 
 BTreeIterator* BTreeindex::findKey(DBDataValue key) {
+    std::cout << "BtreeIndex" << std::endl;
     BTreeVertex* start = new BTreeVertex(m_bm, 0, m_index_filename, type);
     uint32 root = start->root;
     delete start;
@@ -201,12 +203,10 @@ void BTreeindex::BTree_insert_nonfull(uint32 u, BTreeItem item) {
     BTreeVertex* vertex = new BTreeVertex(m_bm, u, m_index_filename, type);
     int i = vertex->size - 1;
     if(vertex->isleaf) {
-//        std::cout << u << std::endl;
         while (i >= 0 && item.key < vertex->data[i].key) {
             vertex->data[i + 1] = vertex->data[i];
             --i;
         }
-//        std::cout << "item in " << i + 1 << std::endl;
         vertex->data[i + 1] = item;
         ++vertex->size;
         delete vertex;
@@ -222,6 +222,7 @@ void BTreeindex::BTree_insert_nonfull(uint32 u, BTreeItem item) {
         delete current_vertex;
 
         if(current_size == BTreeVertex::get_capacity(type)) {
+//            std::cout << "FULL2" << std::endl;
             delete vertex;
             BTree_split_child(u, i);
             vertex = new BTreeVertex(m_bm, u, m_index_filename, type);
