@@ -18,7 +18,7 @@ public:
     Record* get(uint32 index) const;
     void set(uint32 index, Record* record) const;
     void add(Record* r);
-    void createIndex(uint32 column);
+    void createIndex(uint32 column, IndexType type);
     IndexIterator* select(uint32 column, DBDataValue key);
     void update(uint32 column, uint32 position, DBDataValue oldkey, DBDataValue newkey);
     void remove(uint32 column, uint32 position, DBDataValue key);
