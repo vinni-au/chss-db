@@ -14,6 +14,7 @@ public:
     uint32 get_size() const;
     Signature* get_file_signature() const;
     Record* get(uint32 index) const;
+    void set(uint32 index, Record* record) const;
     void add(Record* r);
     void createIndex(uint32 column, uint32 index_type);
     IndexIterator* select(uint32 column, DBDataValue key, uint32 index_type);
