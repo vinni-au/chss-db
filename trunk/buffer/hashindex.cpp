@@ -7,10 +7,10 @@ HashIndexIterator::HashIndexIterator(Index *index, DBDataValue key): IndexIterat
 void HashIndex::createIndex() {
     int32 offset = 0;
     uint32 t = 0;
-    m_bm->write(m_index_filename, 0, &t, sizeof(uint32));
+    m_bm->write(m_index_filename, 0, (char*)&t, sizeof(uint32));
     for(int i=0;i<BUCKETS_CNT;++i) {
-        m_bm->write(m_index_filename, PAGESIZE*(i+1), &t, sizeof(uint32));
-        m_bm->write(m_index_filename, PAGESIZE*(i+2)-sizeof(uint32), &t, sizeof(uint32));
+        m_bm->write(m_index_filename, PAGESIZE*(i+1), (char*)&t, sizeof(uint32));
+        m_bm->write(m_index_filename, PAGESIZE*(i+2)-sizeof(uint32), (char*)&t, sizeof(uint32));
     }
 }
 
@@ -73,11 +73,11 @@ static bool compare(DBDataValue const &value, char *data) {
 
 void HashIndex::addKey(DBDataValue key, uint32 value) {
     int hash = get_hash(key, BUCKETS_CNT);
-    int key_size = get_bufsize(key);
+    char *buff = new char[300];
+    int key_size = get_bufsize(key, buff);
     int record_size = key_size+sizeof(uint32);
     int records_per_page = (PAGESIZE-sizeof(uint32))/record_size;
     int page = 0;
-    char buff[300];
     m_bm->read(m_index_filename, PAGESIZE*(hash+1), buff, sizeof(uint32));
     int last = *((int*)buff);
     int last_page = last/PAGESIZE;
@@ -86,17 +86,20 @@ void HashIndex::addKey(DBDataValue key, uint32 value) {
         m_bm->write(m_index_filename, last+record_size, buff, key_size);
         m_bm->write(m_index_filename, last+record_size+key_size, (char*)&value, sizeof(uint32));
         uint32 t = last+record_size+sizeof(value);
-        m_bm->write(m_index_filename, PAGESIZE*(hash+1), &t, sizeof(uint32));
+        m_bm->write(m_index_filename, PAGESIZE*(hash+1), (char*)&t, sizeof(uint32));
     } else {
         m_bm->read(m_index_filename, 0, buff, sizeof(uint32));
-        m_mb->write(m_index_filename, 0, *((uint32*)buff)+1, sizeof(uint32));
+        int tt = *((uint32*)buff);
+        ++tt;
+        m_bm->write(m_index_filename, 0, (char*)&tt, sizeof(uint32));
         uint32 new_page = *((uint32*)buff)+BUCKETS_CNT+1;
-        m_mb->write(m_index_filename, (last_page+1)*PAGESIZE-sizeof(uint32), *((uint32*)buff)+1, sizeof(uint32));
+        tt = *((uint32*)buff)+1;
+        m_bm->write(m_index_filename, (last_page+1)*PAGESIZE-sizeof(uint32), (char*)&tt, sizeof(uint32));
         uint32 t = 0;
         m_bm->write(m_index_filename, (new_page+1)*PAGESIZE-sizeof(uint32), (char*)&t, sizeof(uint32));
 
         m_bm->write(m_index_filename, (new_page)*PAGESIZE, buff, key_size);
-        m_bm->write(m_index_filename, (new_page)*PAGESIZE+key_size, &value, sizeof(uint32));
+        m_bm->write(m_index_filename, (new_page)*PAGESIZE+key_size, (char*)&value, sizeof(uint32));
     }
 
     delete[]buff;
@@ -110,13 +113,13 @@ static uint32 find_key(BufferManager *bm, DBDataValue *key, std::string const &f
 }
 
 void HashIndex::deleteKey(DBDataValue key, uint32 value) {
-    uint32 start = find_keyvalue(m_bm, &key, value, m_index_filename);
-    if (!start) {
-        return;
-    }
-    char *buffer = new char[300];
-    uint32 item_size = bufsize + sizeof(value) + sizeof(uint32)*2;
-    m_bm->read(m_index_filename, start, buffer, item_size);
+//    uint32 start = find_keyvalue(m_bm, &key, value, m_index_filename);
+//    if (!start) {
+//        return;
+//    }
+//    char *buffer = new char[300];
+//    uint32 item_size = bufsize + sizeof(value) + sizeof(uint32)*2;
+//    m_bm->read(m_index_filename, start, buffer, item_size);
 }
 
 IndexIterator* HashIndex::findKey(DBDataValue key) {
