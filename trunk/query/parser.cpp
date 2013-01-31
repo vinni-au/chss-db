@@ -415,7 +415,8 @@ UpdateQuery* Parser::p_update() {
     UpdateQuery* result = new UpdateQuery;
     accept(Lex_update);
 
-    accept(Lex_table);
+    if (symbol == Lex_table)
+        accept(Lex_table);
     result->m_tablename = ident;
     accept(Lex_Ident);
     accept(Lex_set);
