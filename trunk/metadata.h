@@ -16,9 +16,9 @@ private:
     std::string m_name;
 public:
     IndexType indextype;
-    bool unique_index;
+    int unique_index;
 
-    Column(DBDataType type, std::string name, IndexType indextype = NOINDEX, bool unique_index = false):
+    Column(DBDataType type, std::string name, IndexType indextype = NOINDEX, int unique_index = 0):
         m_type(type), m_name(name), indextype(indextype), unique_index(unique_index) { }
     Column() { }
     DBDataType get_type() const {
@@ -34,6 +34,8 @@ public:
         int t = m_name.length() + 1;
         out.write((char*)&t, sizeof(int));
         out.write(m_name.c_str(), m_name.length() + 1);
+        out.write((char*)&indextype, sizeof(int));
+        out.write((char*)&unique_index, sizeof(int));
     }
 
     void read(std::ifstream &in) {
@@ -43,6 +45,8 @@ public:
         char *buf = new char[t];
         in.read(buf, t);
         m_name = std::string(buf);
+        in.read((char*)(&indextype), sizeof(int));
+        in.read((char*)(&unique_index), sizeof(int));
         delete[] buf;
     }
 
