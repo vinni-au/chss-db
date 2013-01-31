@@ -1,6 +1,7 @@
 #include "queryprocessor.hpp"
 #include "../metadata.h"
 #include "../messagedatareader.hpp"
+#include "../buffer/index.h"
 #include "../buffer/indexfile.h"
 
 struct FileIterator : IDataReader {
@@ -63,12 +64,13 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
         if(t->get_file() == 0) {
             t->set_file(new IndexFile(m_db->buffer(), index, t->makeSignature()));
         }
-//        if(q->condition()) {
-            std::pair< std::string, DBDataValue > cond = q->condition();
+        if(!q->condition().first.empty()) {
+            std::pair< std::string, DBDataValue> cond = q->condition();
             uint32 column = signature->get_index(cond.first);
-//            return indexfile.select(column, cond.second, 1);
+            return t->get_file()->select(column, cond.second, 1);
+        } else {
             return new FileIterator(t->get_file());
-//        }
+        }
     } else if(query->type() == Query::CreateIndex) {
         std::cout << "CreateIndex" << std::endl;
         CreateIndexQuery* q = static_cast<CreateIndexQuery*>(query);
@@ -78,10 +80,12 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
         }
         uint32 index = meta->get_table_index(tablename);
         Table* t = meta->get_table(index);
+        if(t->get_file() == 0) {
+            t->set_file(new IndexFile(m_db->buffer(), index, t->makeSignature()));
+        }
         Signature* signature = t->makeSignature();
-        signature->get_index(q->indexname());
-        IndexFile indexfile(m_db->buffer(), index, t->makeSignature());
-        indexfile.createIndex(0, 1);
+        uint32 column = signature->get_index(q->indexname());
+        t->get_file()->createIndex(column, 1);
     } else if (query->type() == Query::Insert) {
         std::cout << "Insert" << std::endl;
         InsertQuery* q = static_cast<InsertQuery*>(query);
@@ -92,7 +96,7 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
         uint32 index = meta->get_table_index(tablename);
         Table* t = meta->get_table(index);
         Signature* signature = t->makeSignature();
-        Record record(signature);
+        Record record(-1, signature);
         for (size_t i = 0; i < q->values().size(); ++i) {
             std::pair<std::string, DBDataValue> cur = q->values()[i];
             uint32 index = signature->get_index(cur.first);
@@ -116,6 +120,41 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
         delete signature;
     } else if (query->type() == Query::Delete) {
     } else if (query->type() == Query::Update) {
+        std::cout << "Update" << std::endl;
+        UpdateQuery* q = static_cast<UpdateQuery*>(query);
+        std::string tablename = q->tablename();
+        if(!meta->exist_table(tablename)) {
+            return new MessageDataReader("Table doesn't exist");
+        }
+        uint32 index = meta->get_table_index(tablename);
+        Table* t = meta->get_table(index);
+        Signature* signature = t->makeSignature();
+        if(t->get_file() == 0) {
+            t->set_file(new IndexFile(m_db->buffer(), index, t->makeSignature()));
+        }
+        IDataReader* data;
+        if(!q->condition().first.empty()) {
+            std::pair< std::string, DBDataValue> cond = q->condition();
+            uint32 column = signature->get_index(cond.first);
+            data = t->get_file()->select(column, cond.second, 1);
+        } else {
+            data = new FileIterator(t->get_file());
+        }
+        uint32 cnt = 0;
+        while(data->hasNextRecord()) {
+            Record* record = data->getNextRecord();
+            uint32 position = record->getPosition();
+            for(uint32 i = 0; i < q->values().size(); ++i) {
+                uint32 column = signature->get_index(q->values()[i].first);
+                record->set(position, q->values()[i].second);
+            }
+            t->get_file()->set(position, record);
+            delete record;
+            ++cnt;
+        }
+        delete data;
+        delete signature;
+        return new MessageDataReader("Affected rows: " + int_to_string(cnt));
     }
     return 0;
 }

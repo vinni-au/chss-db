@@ -8,11 +8,10 @@ BTreeVertex::BTreeVertex(BufferManager* _bm, uint32 _u, const std::string& _file
     total = *(int*)(buffer + sizeof(uint32));
     size = *(int*)(buffer + 2 * sizeof(uint32));
     isleaf = *(bool*)(buffer + 3 * sizeof(uint32));
-    delete[] buffer;
     uint32 capacity = get_capacity(type);
     uint32 itemsize = sizeof(uint32) + type.get_size();
     data = new BTreeItem[capacity];
-    for(uint32 i = 0; i < capacity; ++i) {
+    for(uint32 i = 0; i < size; ++i) {
         uint32 value = *(uint32*)(buffer + BTreeindex::HEADER_SIZE + itemsize * i);
         if(type.get_type() == DBDataType::INT) {
             int key = *(int*)(buffer + BTreeindex::HEADER_SIZE + itemsize * i + sizeof(uint32));
@@ -24,11 +23,14 @@ BTreeVertex::BTreeVertex(BufferManager* _bm, uint32 _u, const std::string& _file
             std::string key(buffer + BTreeindex::HEADER_SIZE + itemsize * i + sizeof(uint32), buffer + BTreeindex::HEADER_SIZE + itemsize * i + sizeof(uint32) + type.get_size());
             data[i] = BTreeItem(value, DBDataValue(key));
         }
+//        std::cout << data[i].value << ' ' << data[i].key.intValue() << std::endl;
+
     }
+    delete[] buffer;
 }
 
 uint32 BTreeVertex::get_capacity(DBDataType type) {
-    return PAGESIZE / type.get_type();
+    return (PAGESIZE - BTreeindex::HEADER_SIZE) / (sizeof(uint32) + type.get_size());
 }
 
 BTreeVertex::~BTreeVertex() {
@@ -39,7 +41,7 @@ BTreeVertex::~BTreeVertex() {
     *(int*)(buffer + 2 * sizeof(uint32)) = size;
     *(bool*)(buffer + 3 * sizeof(uint32)) = isleaf;
     uint32 itemsize = sizeof(uint32) + m_type.get_size();
-    for(uint32 i = 0; i < capacity; ++i) {
+    for(uint32 i = 0; i < size; ++i) {
         *(uint32*)(buffer + BTreeindex::HEADER_SIZE + itemsize * i) = data[i].value;
         if(m_type.get_type() == DBDataType::INT) {
             *(int*)(buffer + BTreeindex::HEADER_SIZE + itemsize * i + sizeof(uint32)) = data[i].key.intValue();
@@ -68,26 +70,34 @@ bool BTreeIterator::hasNextRecord() {
         while(!path.empty()) {
             uint32& current_vertex = path[path.size() - 1].first;
             uint32& current_position = path[path.size() - 1].second;
+//            std::cout << "Iter " << current_vertex << ' ' << current_position << std::endl;
             BTreeVertex cur(m_index->m_bm, current_vertex, ((BTreeindex*)m_index)->m_index_filename, m_key.type());
             if(cur.isleaf) {
+//                std::cout << "Leaf (" << current_position << ", " << cur.size << ")" << std::endl;
                 while(current_position < cur.size && cur.data[current_position].key != m_key) {
+//                    std::cout << "> " << cur.data[current_position].key.intValue() << ' ' << m_key.intValue() << std::endl;
                     ++current_position;
                 }
                 if(current_position < cur.size) {
                     current_record = m_index->m_file->get(cur.data[current_position++].value);
                     break;
                 }
+                path.pop_back();
             } else {
+//                std::cout << "Go (" << current_position << ", " << cur.size << ") " << std::endl;
                 while(current_position < cur.size) {
-                    if((cur.data[current_position].key <= m_key) && (m_key <= cur.data[current_position].key)) {
+                    if((current_position == 0 || cur.data[current_position - 1].key <= m_key) && (m_key <= cur.data[current_position].key || current_position == cur.size - 1)) {
                         ++current_position;
-                        path.push_back(std::make_pair(cur.data[current_position].value, 0));
+                        path.push_back(std::make_pair(cur.data[current_position - 1].value, 0));
                         break;
                     }
                     ++current_position;
                 }
+//                std::cout << current_vertex << ' ' << current_position << std::endl;
+                if(current_position == cur.size) {
+                    path.pop_back();
+                }
             }
-            path.pop_back();
         }
     }
     return current_record != 0;
@@ -105,19 +115,29 @@ void BTreeindex::createIndex() {
     delete start;
     uint32 size = m_file->get_size();
     for(uint32 i = 0; i < size; ++i) {
-//        std::cout << "GO" << std::endl;
         Record *cur = m_file->get(i);
 //        std::cout << "Adding" << i << std::endl;
         addKey(cur->get(m_column), i);
         delete cur;
 //        std::cout << "Added" << i << std::endl;
-//        if(i == 9000)
+//        if(i == 1000)
 //            break;
     }
+//    start = new BTreeVertex(m_bm, 0, m_index_filename, type);
+//    uint32 total = start->total;
+//    delete start;
+//    for(uint32 u = 0; u < total; ++u) {
+//        BTreeVertex* cur = new BTreeVertex(m_bm, u, m_index_filename, type);
+//        std::cout << "Vertex" << u << ": " << cur->size << std::endl;
+//        for(int i = 0; i < cur->size; ++i) {
+//            std::cout << cur->data[i].key.intValue() << ' ' << cur->data[i].value << std::endl;
+//        }
+//        delete cur;
+//    }
 }
 
 void BTreeindex::addKey(DBDataValue key, uint32 index) {
-//    std::cout << "addKey" << column << ' ' << page << std::endl;
+//    std::cout << "addKey" << key.intValue() << ' ' << index << std::endl;
     BTreeItem item(index, key);
 
     BTreeVertex* start = new BTreeVertex(m_bm, 0, m_index_filename, type);
@@ -129,7 +149,7 @@ void BTreeindex::addKey(DBDataValue key, uint32 index) {
     delete vroot;
 
     if(current_size == BTreeVertex::get_capacity(type)) {
-        std::cout << "FULL" << std::endl;
+//        std::cout << "FULL" << std::endl;
 
         BTreeVertex* start = new BTreeVertex(m_bm, 0, m_index_filename, type);
         uint32 s = start->total++;
@@ -143,7 +163,7 @@ void BTreeindex::addKey(DBDataValue key, uint32 index) {
         delete sv;
 
         BTree_split_child(s, 0);
-        BTree_insert_nonfull(s, item);
+//        BTree_insert_nonfull(s, item);
     } else {
         BTree_insert_nonfull(root, item);
     }
@@ -170,6 +190,7 @@ void BTreeindex::BTree_insert_nonfull(uint32 u, BTreeItem item) {
             vertex->data[i + 1] = vertex->data[i];
             --i;
         }
+//        std::cout << "item in " << i + 1 << std::endl;
         vertex->data[i + 1] = item;
         ++vertex->size;
         delete vertex;
@@ -201,7 +222,7 @@ void BTreeindex::BTree_insert_nonfull(uint32 u, BTreeItem item) {
 }
 
 void BTreeindex::BTree_split_child(uint32 u, uint32 index) {
-    std::cout << "BTree split child" << index << ' ' << std::endl;
+//    std::cout << "BTree split child" << index << ' ' << std::endl;
     BTreeVertex vertex(m_bm, u, m_index_filename, type);
 
     BTreeVertex* start = new BTreeVertex(m_bm, 0, m_index_filename, type);
@@ -228,12 +249,12 @@ void BTreeindex::BTree_split_child(uint32 u, uint32 index) {
         vertex.data[i] = vertex.data[i - 1];
     }
     vertex.data[index + 1].value = z;
-    std::cout << "in" << std::endl;
+//    std::cout << "in" << std::endl;
 
-//    for(int i = vertex.size - 1; i > index; --i) {
-//        vertex.data[i].key = vertex.data[i - 1].key;
-//    }
-    std::cout << "out" << std::endl;
+    for(int i = vertex.size - 1; i > index; --i) {
+        vertex.data[i].key = vertex.data[i - 1].key;
+    }
+//    std::cout << "out" << std::endl;
     vertex.data[index].key = vy.data[t1].key;
     ++vertex.size;
 }

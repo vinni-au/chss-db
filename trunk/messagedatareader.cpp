@@ -15,7 +15,7 @@ MessageDataReader::MessageDataReader(std::string m)
 Record* MessageDataReader::getNextRecord() {
     if (m_hasNext) {
         m_hasNext = false;
-        Record* result = new Record(m_sig);
+        Record* result = new Record(-1, m_sig);
         result->setVarchar(0, m_msg);
         return result;
     }

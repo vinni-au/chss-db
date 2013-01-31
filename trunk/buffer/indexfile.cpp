@@ -14,7 +14,7 @@ void IndexFile::create() {
 }
 
 Record* IndexFile::get(uint32 index) const {
-    Record* res = new Record(m_signature);
+    Record* res = new Record(index, m_signature);
     m_bm->read(m_table_filename, TABLE_HEADER_SIZE + m_record_size * index, res->get_data_pointer(), m_record_size);
     return res;
 }
