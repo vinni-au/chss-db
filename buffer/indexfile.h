@@ -6,18 +6,22 @@
 
 struct BufferManager;
 struct IndexIterator;
+struct Index;
 
 struct IndexFile {
 public:
     IndexFile(BufferManager* bm, uint32 table_id, Signature* signature);
+    ~IndexFile();
     void create();
     uint32 get_size() const;
     Signature* get_file_signature() const;
     Record* get(uint32 index) const;
     void set(uint32 index, Record* record) const;
     void add(Record* r);
-    void createIndex(uint32 column, uint32 index_type);
-    IndexIterator* select(uint32 column, DBDataValue key, uint32 index_type);
+    void createIndex(uint32 column);
+    IndexIterator* select(uint32 column, DBDataValue key);
+    void update(uint32 column, uint32 position, DBDataValue oldkey, DBDataValue newkey);
+    void remove(uint32 column, uint32 position, DBDataValue key);
     static uint32 const TABLE_HEADER_SIZE = sizeof(uint32);
 private:
     BufferManager* m_bm;
@@ -25,6 +29,7 @@ private:
     std::string m_table_filename;
     Signature* m_signature;
     uint32 m_record_size;
+    std::vector<Index*> indexes;
 };
 
 #endif // INDEXFILE_H

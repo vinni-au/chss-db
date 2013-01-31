@@ -3,10 +3,31 @@
 #include "index.h"
 #include "noindex.h"
 #include "btreeindex.h"
+#include "hashindex.h"
 #include <cstdio>
 
 IndexFile::IndexFile(BufferManager* bm, uint32 table_id, Signature* signature) : m_bm(bm),
-    m_table_id(table_id), m_table_filename("table" + int_to_string(table_id) + ".db"), m_signature(signature), m_record_size(signature->get_size_in_bytes()) {}
+    m_table_id(table_id), m_table_filename("table" + int_to_string(table_id) + ".db"), m_signature(signature), m_record_size(signature->get_size_in_bytes()) {
+    for(uint32 i = 0; i < signature->get_size(); ++i) {
+        Index* current_index;
+        uint32 index_type = 1;
+        if(index_type == 1) {
+            current_index = new BTreeindex(this, m_bm, m_signature, m_table_id, i);
+        } else if(index_type == 2) {
+            current_index = new HashIndex(this, m_bm, m_signature, m_table_id, i);
+        } else {
+            current_index = new Noindex(this, m_bm, m_signature, m_table_id, i);
+        }
+        indexes.push_back(current_index);
+    }
+}
+
+IndexFile::~IndexFile() {
+    for(uint32 i = 0; i < m_signature->get_size(); ++i) {
+        delete indexes[i];
+    }
+    delete m_signature;
+}
 
 void IndexFile::create() {
     uint32 size = 0;
@@ -20,7 +41,6 @@ Record* IndexFile::get(uint32 index) const {
 }
 
 void IndexFile::set(uint32 index, Record* record) const {
-    std::cout << "setting" << record->getDouble(2) << std::endl;
     m_bm->write(m_table_filename, TABLE_HEADER_SIZE + m_record_size * index, record->get_data_pointer(), m_record_size);
 }
 
@@ -42,22 +62,20 @@ uint32 IndexFile::get_size() const {
     return size;
 }
 
-void IndexFile::createIndex(uint32 column, uint32 index_type) {
-    Index* current_index = 0;
-    if(index_type == 1) {
-        current_index = new BTreeindex(this, m_bm, m_signature, m_table_id, column);
-    } else {
-        current_index = new Noindex(this, m_bm, m_signature, m_table_id, column);
-    }
-    current_index->createIndex();
+void IndexFile::createIndex(uint32 column) {
+    indexes[column]->createIndex();
 }
 
-IndexIterator* IndexFile::select(uint32 column, DBDataValue key, uint32 index_type) {
-    Index* current_index = 0;
-    if(index_type == 1) {
-        current_index = new BTreeindex(this, m_bm, m_signature, m_table_id, column);
-    } else {
-        current_index = new Noindex(this, m_bm, m_signature, m_table_id, column);
-    }
-    return current_index->findKey(key);
+IndexIterator* IndexFile::select(uint32 column, DBDataValue key) {
+    IndexIterator* res = indexes[column]->findKey(key);
+    return res;
+}
+
+void IndexFile::update(uint32 column, uint32 position, DBDataValue oldkey, DBDataValue newkey) {
+    indexes[column]->deleteKey(oldkey, position);
+    indexes[column]->addKey(newkey, position);
+}
+
+void IndexFile::remove(uint32 column, uint32 position, DBDataValue key) {
+    indexes[column]->deleteKey(key, position);
 }

@@ -40,6 +40,7 @@ struct BTreeIterator : IndexIterator {
 private:
     Record* current_record;
     std::vector< std::pair<uint32, uint32> > path;
+friend struct BTreeindex;
 };
 
 struct BTreeindex : Index {

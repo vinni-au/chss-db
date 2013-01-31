@@ -146,7 +146,6 @@ void BTreeindex::addKey(DBDataValue key, uint32 index) {
     BTreeVertex* vroot = new BTreeVertex(m_bm, root, m_index_filename, type);
     uint32 current_size = vroot->size;
     delete vroot;
-
     if(current_size == BTreeVertex::get_capacity(type)) {
 //        std::cout << "FULL" << std::endl;
 
@@ -162,7 +161,7 @@ void BTreeindex::addKey(DBDataValue key, uint32 index) {
         delete sv;
 
         BTree_split_child(s, 0);
-//        BTree_insert_nonfull(s, item);
+        BTree_insert_nonfull(s, item);
     } else {
         BTree_insert_nonfull(root, item);
     }
@@ -176,7 +175,25 @@ BTreeIterator* BTreeindex::findKey(DBDataValue key) {
     return new BTreeIterator(this, key, root);
 }
 
-void BTreeindex::deleteKey(DBDataValue key, uint32 index) {
+void BTreeindex::deleteKey(DBDataValue key, uint32 position) {
+    BTreeIterator* it = findKey(key);
+    while(it->hasNextRecord()) {
+        Record* record = it->getNextRecord();
+        if(record->getPosition() == position) {
+            uint32 current_vertex = it->path.back().first;
+            uint32 current_position = it->path.back().second;
+            BTreeVertex* vertex = new BTreeVertex(m_bm, current_vertex, m_index_filename, type);
+            for(uint32 i = current_position; i < vertex->size; ++i) {
+                vertex->data[i - 1] = vertex->data[i];
+            }
+            --vertex->size;
+            delete vertex;
+            delete record;
+            break;
+        }
+        delete record;
+    }
+    delete it;
 }
 
 void BTreeindex::BTree_insert_nonfull(uint32 u, BTreeItem item) {
