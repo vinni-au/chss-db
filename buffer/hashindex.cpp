@@ -14,6 +14,13 @@ void HashIndex::createIndex() {
     for(int i=0;i<=BUCKETS_CNT;++i) {
         create_page(m_bm, m_index_filename, i);
     }
+    uint32 size = m_file->get_size();
+    for(uint32 i = 0; i < size; ++i) {
+        Record *cur = m_file->get(i);
+        addKey(cur->get(m_column), i);
+        delete cur;
+    }
+
 }
 
 static int32 get_hash(int n) {
