@@ -8,7 +8,7 @@
 struct HashIndexIterator;
 
 struct HashIndex: Index {
-    static int const BUCKETS_CNT = 1000033;
+    static int const BUCKETS_CNT = 10000+7;
     HashIndex(IndexFile* file, BufferManager* bm, Signature* signature, uint32 table_id, uint32 column);
     virtual void createIndex() = 0;
     virtual void addKey(DBDataValue key, uint32 value) = 0;
