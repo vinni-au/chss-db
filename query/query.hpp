@@ -17,8 +17,6 @@ struct Query {
 
     Query() : m_type(Other) { }
 
-    static Query* parse(std::string const &query);
-
     QueryType type() const {
         return m_type;
     }
