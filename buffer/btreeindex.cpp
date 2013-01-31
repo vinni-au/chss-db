@@ -70,7 +70,6 @@ bool BTreeIterator::hasNextRecord() {
         while(!path.empty()) {
             uint32& current_vertex = path[path.size() - 1].first;
             uint32& current_position = path[path.size() - 1].second;
-//            std::cout << "Iter " << current_vertex << ' ' << current_position << std::endl;
             BTreeVertex cur(m_index->m_bm, current_vertex, ((BTreeindex*)m_index)->m_index_filename, m_key.type());
             if(cur.isleaf) {
 //                std::cout << "Leaf (" << current_position << ", " << cur.size << ")" << std::endl;

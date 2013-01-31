@@ -53,6 +53,7 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
         file->create();
         return new MessageDataReader(std::string("OK"));
     } else if (query->type() == Query::Select) {
+        std::cout << "SELECT" << std::endl;
         SelectQuery* q = static_cast<SelectQuery*>(query);
         std::string tablename = q->tablename();
         if(!meta->exist_table(tablename)) {
@@ -64,6 +65,7 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
         if(t->get_file() == 0) {
             t->set_file(new IndexFile(m_db->buffer(), index, t->makeSignature()));
         }
+        std::cout << "GO" << std::endl;
         if(!q->condition().first.empty()) {
             std::pair< std::string, DBDataValue> cond = q->condition();
             uint32 column = signature->get_index(cond.first);
@@ -146,7 +148,8 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
             uint32 position = record->getPosition();
             for(uint32 i = 0; i < q->values().size(); ++i) {
                 uint32 column = signature->get_index(q->values()[i].first);
-                record->set(position, q->values()[i].second);
+                std::cout << "Set " << column << " " << q->values()[i].second.doubleValue() << std::endl;
+                record->set(column, q->values()[i].second);
             }
             t->get_file()->set(position, record);
             delete record;
