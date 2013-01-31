@@ -1,4 +1,5 @@
 #include "parser.hpp"
+#include "../buffer/signature.h"
 #include "../metadata.h"
 
 Parser::ltable Parser::lexems[] = {
@@ -395,10 +396,10 @@ Query* Parser::p_create() {
         accept(Lex_using);
         if (symbol == Lex_btree) {
             accept(Lex_btree);
-            result->m_indextype = CreateIndexQuery::BTREE;
+            result->m_indextype = TREEINDEX;
         } else if (symbol == Lex_hash) {
             accept(Lex_hash);
-            result->m_indextype = CreateIndexQuery::HASH;
+            result->m_indextype = HASHINDEX;
         }
         result->m_unique = needUnique;
 

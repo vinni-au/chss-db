@@ -2,6 +2,7 @@
 #define QUERY_HPP
 
 #include "../global.h"
+#include "../buffer/signature.h"
 
 
 struct Query {
@@ -90,11 +91,6 @@ protected:
 
 struct CreateIndexQuery : Query
 {
-    enum Type {
-        BTREE = 0,
-        HASH
-    };
-
     CreateIndexQuery() : m_indextype(-1)
     {   m_type = CreateIndex; }
 
