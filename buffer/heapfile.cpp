@@ -11,7 +11,7 @@ void HeapFile::create() {
 }
 
 Record* HeapFile::get(uint32 index) const {
-    Record* res = new Record(m_signature);
+    Record* res = new Record(index, m_signature);
     m_bm->read(m_table_file, HEADER_SIZE + m_record_size * index, res->get_data_pointer(), m_record_size);
     return res;
 }
