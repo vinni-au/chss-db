@@ -4,6 +4,10 @@
 Record::Record(uint32 position, Signature* signature) : m_position(position), m_signature(signature), m_data(new char[signature->get_size_in_bytes()]) {
     memset(m_data, 0, signature->get_size_in_bytes());}
 
+Record::~Record() {
+    delete m_data;
+}
+
 char* Record::get_data_pointer() const {
     return m_data;
 }
@@ -59,5 +63,8 @@ DBDataValue Record::get(uint32 pos) const {
 std::string Record::getVarchar(uint32 pos) const {
     uint32 offset = m_signature->get_offset(pos);
     uint32 size = m_signature->get_field_type(pos).get_size();
-    return std::string(m_data + offset, m_data + offset + size);
+    std::string res = std::string(m_data + offset, m_data + offset + size);
+    while(res.size() > 0 && res[res.size() - 1] == 0)
+        res = res.substr(0, res.size() - 1);
+    return res;
 }
