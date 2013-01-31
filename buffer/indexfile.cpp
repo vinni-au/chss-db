@@ -65,11 +65,11 @@ void IndexFile::createIndex(uint32 column, IndexType type) {
     delete indexes[column];
     Index* current_index;
     if(type == TREEINDEX) {
-        current_index = new BTreeindex(this, m_bm, m_signature, m_table_id, i);
+        current_index = new BTreeindex(this, m_bm, m_signature, m_table_id, column);
     } else if(type == HASHINDEX) {
-        current_index = new HashIndex(this, m_bm, m_signature, m_table_id, i);
+        current_index = new HashIndex(this, m_bm, m_signature, m_table_id, column);
     } else {
-        current_index = new Noindex(this, m_bm, m_signature, m_table_id, i);
+        current_index = new Noindex(this, m_bm, m_signature, m_table_id, column);
     }
     indexes[column] = current_index;
     indexes[column]->createIndex();
