@@ -21,8 +21,10 @@ private:
     std::string m_name;
 public:
     IndexType indextype;
+    bool unique_index;
 
-    Column(DBDataType type, std::string name, IndexType indextype = NOINDEX): m_type(type), m_name(name), indextype(indextype) { }
+    Column(DBDataType type, std::string name, IndexType indextype = NOINDEX, bool unique_index = false):
+        m_type(type), m_name(name), indextype(indextype), unique_index(unique_index) { }
     Column() { }
     DBDataType get_type() const {
         return m_type;
