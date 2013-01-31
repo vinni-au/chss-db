@@ -81,15 +81,15 @@ static inline int get_offset(int hash, int idx, int record_len, int records_per_
         int offset = (hash+1)*PAGESIZE+sizeof(uint32)+idx*record_len;
         return offset;
     } else {
-        if ((list_len-records_per_first_page)%records_per_page==0) {
-            int offset = hash+(list_len-records_per_first_page)/records_per_page*PAGESIZE*HashIndex::BUCKETS_CNT;
+        if ((idx-records_per_first_page)%records_per_page==0) {
+            int offset = hash+(idx-records_per_first_page)/records_per_page*PAGESIZE*HashIndex::BUCKETS_CNT;
             return offset;
         } else {
-            int offset = list_len-records_per_first_page;
-            int cur_page = hash+BUCKETS_CNT+1;
+            int offset = idx-records_per_first_page;
+            int cur_page = hash+HashIndex::BUCKETS_CNT+1;
             while (offset>=records_per_page) {
                 offset-=records_per_page;
-                cur_page+=BUCKETS_CNT;
+                cur_page+=HashIndex::BUCKETS_CNT;
             }
             return cur_page*PAGESIZE+offset*record_len;
         }
@@ -106,7 +106,7 @@ void HashIndex::addKey(DBDataValue key, uint32 value) {
     get_buff(key, value, record, record_len);
     int records_per_first_page = (PAGESIZE-sizeof(uint32))/record_len;
     int records_per_page = (PAGESIZE)/record_len;
-    int offset = get_offset(hash, list_len, record_size, records_per_first_page, records_per_page);
+    int offset = get_offset(hash, list_len, record_len, records_per_first_page, records_per_page);
     m_bm->write(m_index_filename, offset, record, record_len);
     delete[] record;
     delete[] buff;
@@ -117,7 +117,7 @@ void HashIndex::deleteKey(DBDataValue key, uint32 value) {
     char *buff = new char[300];
 
     int record_len =0 ;
-    get_buff(key, value, record, record_len);
+    get_buff(key, value, buff, record_len);
 
     m_bm->read(m_index_filename, (hash+1)*PAGESIZE, buff, sizeof(uint32));
     int list_len = *((uint32*)buff);
@@ -166,13 +166,13 @@ void HashIndex::deleteKey(DBDataValue key, uint32 value) {
 }
 
 IndexIterator* HashIndex::findKey(DBDataValue key) {
-    uint32 start = find_key(m_bm, &key, m_index_filename);
-    if (!start) {
-        // return kind of fake iterator
-        return (IndexIterator*)0;
-    }
-    // return real iterator
-    return (IndexIterator*)0;
+//    uint32 start = find_key(m_bm, &key, m_index_filename);
+//    if (!start) {
+//        // return kind of fake iterator
+//        return (IndexIterator*)0;
+//    }
+//    // return real iterator
+//    return (IndexIterator*)0;
 }
 
 
