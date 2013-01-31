@@ -16,8 +16,11 @@ void IndexFile::create() {
 Record* IndexFile::get(uint32 index) const {
     Record* res = new Record(m_signature);
     m_bm->read(m_table_filename, TABLE_HEADER_SIZE + m_record_size * index, res->get_data_pointer(), m_record_size);
-//    std::cout << "Record size" << res->getInt(0) << std::endl;
     return res;
+}
+
+void IndexFile::set(uint32 index, Record* record) const {
+    m_bm->write(m_table_filename, TABLE_HEADER_SIZE + m_record_size * index, record->get_data_pointer(), m_record_size);
 }
 
 Signature* IndexFile::get_file_signature() const {
