@@ -58,6 +58,5 @@ void DBShell::run() {
             std::cout << "ERROR: " << parser.error() << std::endl;
 //            postError("DBShell", "It seems to be wrong query");
         }
-        delete q;
     }
 }
