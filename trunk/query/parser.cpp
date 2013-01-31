@@ -459,8 +459,9 @@ std::vector< std::pair<std::string, DBDataValue> > Parser::p_valueslist() {
     std::vector< std::pair<std::string, DBDataValue> > result;
     while (symbol == Lex_Ident) {
         accept(Lex_Ident);
+        std::string name = ident;
         accept(Lex_eq);
-        result.push_back(make_pair(ident, p_value()));
+        result.push_back(make_pair(name, p_value()));
 
         if (symbol == Lex_Comma)
             nextsym();
