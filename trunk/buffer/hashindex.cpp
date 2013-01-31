@@ -4,13 +4,15 @@ HashIndex::HashIndex(IndexFile* file, BufferManager* bm, Signature* signature, u
 
 HashIndexIterator::HashIndexIterator(Index *index, DBDataValue key): IndexIterator(index, key) {}
 
+static void create_page(BufferManager *bm, std::string const &filename, int pagenumber) {
+    char *buff = new char[PAGESIZE];
+    memset(buff, 0, PAGESIZE);
+    bm->write(filename, pagenumber*PAGESIZE, buff, PAGESIZE);
+}
+
 void HashIndex::createIndex() {
-    int32 offset = 0;
-    uint32 t = 0;
-    m_bm->write(m_index_filename, 0, (char*)&t, sizeof(uint32));
-    for(int i=0;i<BUCKETS_CNT;++i) {
-        m_bm->write(m_index_filename, PAGESIZE*(i+1), (char*)&t, sizeof(uint32));
-        m_bm->write(m_index_filename, PAGESIZE*(i+2)-sizeof(uint32), (char*)&t, sizeof(uint32));
+    for(int i=0;i<=BUCKETS_CNT;++i) {
+        create_page(m_bm, m_index_filename, i);
     }
 }
 
@@ -46,80 +48,121 @@ static int32 get_hash(DBDataValue const &key, int mod) {
     return hash;
 }
 
-static int get_bufsize(DBDataValue const &key, char *buffer) {
+static void get_buff(DBDataValue const &key, int value, char *buffer, int &len) {
     int bufsize = 0;
     if (key.type().get_type()==DBDataType::INT) {
-        bufsize = sizeof(int);
+        bufsize = sizeof(int)+sizeof(value);
         *((int*)buffer) = key.intValue();
+        *((int*)(buffer+sizeof(int))) = value;
     } else if (key.type().get_type()==DBDataType::DOUBLE) {
-        bufsize = sizeof(double);
+        bufsize = sizeof(double)+sizeof(value);
         *((double*)buffer) = key.doubleValue();
+        *((int*)(buffer+sizeof(double))) = value;
     } else {
-        bufsize = key.type().m_len;
+        bufsize = key.type().m_len+sizeof(value);
         memcpy(buffer, key.stringValue().c_str(), key.type().m_len);
+        *((int*)(buffer+key.type().m_len)) = value;
     }
-    return bufsize;
+    len = bufsize;
 }
 
-static bool compare(DBDataValue const &value, char *data) {
-    if (value.type().get_type() == DBDataType::INT) {
-        return value.intValue() == *((int*)data);
-    } else if (value.type().get_type() == DBDataType::DOUBLE) {
-        return value.doubleValue() == *((double*)data);
+static bool compare(DBDataValue const &key, char *data) {
+    if (key.type().get_type() == DBDataType::INT) {
+        return key.intValue() == *((int*)data);
+    } else if (key.type().get_type() == DBDataType::DOUBLE) {
+        return key.doubleValue() == *((double*)data);
     } else {
-        return memcmp(data, value.stringValue().c_str(), value.type().m_len) == 0;
+        return memcmp(data, key.stringValue().c_str(), key.type().m_len) == 0;
+    }
+}
+
+static inline int get_offset(int hash, int idx, int record_len, int records_per_first_page, int records_per_page){
+    if (idx<records_per_first_page) {
+        int offset = (hash+1)*PAGESIZE+sizeof(uint32)+idx*record_len;
+        return offset;
+    } else {
+        if ((list_len-records_per_first_page)%records_per_page==0) {
+            int offset = hash+(list_len-records_per_first_page)/records_per_page*PAGESIZE*HashIndex::BUCKETS_CNT;
+            return offset;
+        } else {
+            int offset = list_len-records_per_first_page;
+            int cur_page = hash+BUCKETS_CNT+1;
+            while (offset>=records_per_page) {
+                offset-=records_per_page;
+                cur_page+=BUCKETS_CNT;
+            }
+            return cur_page*PAGESIZE+offset*record_len;
+        }
     }
 }
 
 void HashIndex::addKey(DBDataValue key, uint32 value) {
     int hash = get_hash(key, BUCKETS_CNT);
     char *buff = new char[300];
-    int key_size = get_bufsize(key, buff);
-    int record_size = key_size+sizeof(uint32);
-    int records_per_page = (PAGESIZE-sizeof(uint32))/record_size;
-    int page = 0;
-    m_bm->read(m_index_filename, PAGESIZE*(hash+1), buff, sizeof(uint32));
-    int last = *((int*)buff);
-    int last_page = last/PAGESIZE;
-    int bufsize = get_bufsize(key, buff);
-    if ((last+record_size+sizeof(uint32))%PAGESIZE==0) {
-        m_bm->write(m_index_filename, last+record_size, buff, key_size);
-        m_bm->write(m_index_filename, last+record_size+key_size, (char*)&value, sizeof(uint32));
-        uint32 t = last+record_size+sizeof(value);
-        m_bm->write(m_index_filename, PAGESIZE*(hash+1), (char*)&t, sizeof(uint32));
-    } else {
-        m_bm->read(m_index_filename, 0, buff, sizeof(uint32));
-        int tt = *((uint32*)buff);
-        ++tt;
-        m_bm->write(m_index_filename, 0, (char*)&tt, sizeof(uint32));
-        uint32 new_page = *((uint32*)buff)+BUCKETS_CNT+1;
-        tt = *((uint32*)buff)+1;
-        m_bm->write(m_index_filename, (last_page+1)*PAGESIZE-sizeof(uint32), (char*)&tt, sizeof(uint32));
-        uint32 t = 0;
-        m_bm->write(m_index_filename, (new_page+1)*PAGESIZE-sizeof(uint32), (char*)&t, sizeof(uint32));
-
-        m_bm->write(m_index_filename, (new_page)*PAGESIZE, buff, key_size);
-        m_bm->write(m_index_filename, (new_page)*PAGESIZE+key_size, (char*)&value, sizeof(uint32));
-    }
-
-    delete[]buff;
-
-}
-
-static uint32 find_keyvalue(BufferManager *bm, DBDataValue *key, uint32 value, std::string const &filename) {
-}
-
-static uint32 find_key(BufferManager *bm, DBDataValue *key, std::string const &filename) {
+    m_bm->read(m_index_filename, (hash+1)*PAGESIZE, buff, sizeof(uint32));
+    int list_len = *((uint32*)buff);
+    char *record = new char[300];
+    int record_len =0 ;
+    get_buff(key, value, record, record_len);
+    int records_per_first_page = (PAGESIZE-sizeof(uint32))/record_len;
+    int records_per_page = (PAGESIZE)/record_len;
+    int offset = get_offset(hash, list_len, record_size, records_per_first_page, records_per_page);
+    m_bm->write(m_index_filename, offset, record, record_len);
+    delete[] record;
+    delete[] buff;
 }
 
 void HashIndex::deleteKey(DBDataValue key, uint32 value) {
-//    uint32 start = find_keyvalue(m_bm, &key, value, m_index_filename);
-//    if (!start) {
-//        return;
-//    }
-//    char *buffer = new char[300];
-//    uint32 item_size = bufsize + sizeof(value) + sizeof(uint32)*2;
-//    m_bm->read(m_index_filename, start, buffer, item_size);
+    int hash = get_hash(key, BUCKETS_CNT);
+    char *buff = new char[300];
+
+    int record_len =0 ;
+    get_buff(key, value, record, record_len);
+
+    m_bm->read(m_index_filename, (hash+1)*PAGESIZE, buff, sizeof(uint32));
+    int list_len = *((uint32*)buff);
+    if (!list_len) {
+        delete[]buff;
+        return;
+    }
+    int records_per_first_page = (PAGESIZE-sizeof(uint32))/record_len;
+    int records_per_page = (PAGESIZE)/record_len;
+
+    int records = records_per_first_page;
+    int cur_offset = (hash+1)*PAGESIZE + sizeof(uint32);
+    int cur_page = hash+1;
+    int rest_list = list_len;
+    for(;;) {
+        int t = records;
+        while (t--) {
+            m_bm->read(m_index_filename, cur_offset, buff, record_len);
+            if (compare(key, buff)) {
+                int cur_value = *((uint32*)(buff+record_len-sizeof(value)));
+                if (value==cur_value) {
+                    if (list_len==1) {
+                        --list_len;
+                    } else {
+                        int offset = get_offset(hash, list_len-1, record_len, records_per_first_page, records_per_page);
+                        m_bm->read(m_index_filename, offset, buff, record_len);
+                        m_bm->write(m_index_filename, cur_offset, buff, record_len);
+                    }
+                    delete[] buff;
+                    return;
+                }
+            }
+            cur_offset += record_len + sizeof(value);
+            --rest_list;
+            if (!rest_list)
+                break;
+        }
+        if (!rest_list)
+            break;
+        cur_page += BUCKETS_CNT;
+        cur_offset = PAGESIZE*BUCKETS_CNT;
+        records = records_per_page;
+    }
+
+    delete[]buff;
 }
 
 IndexIterator* HashIndex::findKey(DBDataValue key) {
