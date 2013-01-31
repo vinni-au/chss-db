@@ -11,6 +11,9 @@
 #include <fstream>
 #include <cstdlib>
 
+struct Record;
+struct Signature;
+
 int const PAGESIZE = 4096;
 int const MIN_PAGES_IN_MEMORY = 32;
 
@@ -176,9 +179,6 @@ struct RID {
     int slotNo;
     DBDataType type;
 };
-
-struct Signature;
-struct Record;
 
 struct IDataReader {
     virtual bool hasNextRecord() = 0;

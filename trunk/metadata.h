@@ -3,17 +3,12 @@
 
 #include "global.h"
 #include "buffer/signature.h"
-#include "buffer/indexfile.h"
 #include <string>
 #include <map>
 #include <vector>
 #include <fstream>
 
-enum IndexType {
-    NOINDEX,
-    HASHINDEX,
-    TREEINDEX
-};
+struct IndexFile;
 
 struct Column {
 private:
@@ -121,11 +116,13 @@ public:
     Signature* makeSignature() {
         std::vector<std::string> names;
         std::vector<DBDataType> types;
+        std::vector<std::pair<IndexType, bool> > indextypes;
         for (int i = 0; i < (int)m_columns.size(); ++i) {
             names.push_back(m_columns[i].get_name());
             types.push_back(m_columns[i].get_type());
+            indextypes.push_back(std::make_pair(m_columns[i].indextype, m_columns[i].unique_index));
         }
-        return new Signature(names, types);
+        return new Signature(names, types, indextypes);
     }
 };
 

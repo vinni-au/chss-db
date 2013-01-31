@@ -1,5 +1,6 @@
 #include "dbshell.hpp"
 #include "query/parser.hpp"
+#include "buffer/record.h"
 #include <stdarg.h>
 
 DBShell::DBShell(DB *db) :

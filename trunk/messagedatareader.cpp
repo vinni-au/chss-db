@@ -9,7 +9,7 @@ MessageDataReader::MessageDataReader(std::string m)
     std::vector< DBDataType > types;
     names.push_back("Message");
     types.push_back(DBDataType(DBDataType::VARCHAR, m.size()));
-    m_sig = new Signature(names, types);
+    m_sig = new Signature(names, types, std::vector< std::pair<IndexType, bool> >());
 }
 
 Record* MessageDataReader::getNextRecord() {
