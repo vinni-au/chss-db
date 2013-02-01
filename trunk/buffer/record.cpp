@@ -5,7 +5,7 @@ Record::Record(uint32 position, Signature* signature) : m_position(position), m_
     memset(m_data, 0, signature->get_size_in_bytes());}
 
 Record::~Record() {
-    delete m_data;
+    delete[] m_data;
 }
 
 char* Record::get_data_pointer() const {
