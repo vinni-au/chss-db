@@ -191,10 +191,12 @@ struct RID {
 };
 
 struct IDataReader {
+    IDataReader() : type(0) {}
     virtual bool hasNextRecord() = 0;
     virtual Signature* getSignature() = 0;
     virtual Record* getNextRecord() = 0;
     virtual ~IDataReader() {}
+    int type;
 };
 
 extern inline void postError(const char* who, const char* message);
