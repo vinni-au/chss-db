@@ -11,6 +11,7 @@
 
 int main(int argc, char* argv[])
 {
+    freopen("test.txt","r",stdin);
     if (argc != 3) {
         std::cout << "usage: chss-db <dir> <pages in memory>" << std::endl;
         return 0;

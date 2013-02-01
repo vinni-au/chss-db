@@ -22,6 +22,8 @@ struct Query {
         return m_type;
     }
 
+    virtual ~Query() {}
+
 protected:
     QueryType m_type;
 };
