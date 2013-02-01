@@ -56,7 +56,8 @@ void DBShell::run() {
             }
             delete reader;
         } else {
-            std::cout << "ERROR: " << parser.error() << std::endl;
+            if (parser.error().size() > 0)
+                std::cout << "ERROR: " << parser.error() << std::endl;
 //            postError("DBShell", "It seems to be wrong query");
         }
     }
