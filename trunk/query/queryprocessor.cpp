@@ -116,17 +116,7 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
             if(cur.second.type().get_type() != signature->get_field_type(index).get_type()) {
                 return new MessageDataReader("ERROR: Data type error");
             }
-            switch(signature->get_field_type(index).get_type()) {
-                case 1:
-                    record.setInt(index, cur.second.intValue());
-                    break;
-                case 2:
-                    record.setDouble(index, cur.second.doubleValue());
-                    break;
-                case 0:
-                    record.setVarchar(index, cur.second.stringValue());
-                    break;
-            }
+            record.set(index, cur.second);
         }
         if(t->get_file() == 0) {
             t->set_file(new IndexFile(m_db->buffer(), index, t->makeSignature()));
