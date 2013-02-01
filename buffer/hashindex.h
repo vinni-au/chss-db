@@ -21,14 +21,14 @@ struct HashIndex: Index {
 
 struct HashIndexIterator : IndexIterator {
     HashIndexIterator(Index* index, DBDataValue key);
+    int offset1, offset2;
     Record* getNextRecord();
     bool hasNextRecord();
     Signature* getSignature() {
         return m_index->m_signature;
     }
 protected:
-    Index* m_index;
-    int m_key;
+    HashIndex* m_index;
 };
 
 #endif // HASHINDEX_H

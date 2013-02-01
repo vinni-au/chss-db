@@ -31,7 +31,6 @@ struct IndexIterator : IDataReader {
     Signature* getSignature() {
         return m_index->m_signature;
     }
-protected:
     Index* m_index;
     DBDataValue m_key;
 };
