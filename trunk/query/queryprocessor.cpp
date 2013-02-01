@@ -35,10 +35,10 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
     }
     DBMetaData* meta = m_db->metadata();
     if (query->type() == Query::Create) {
-        std::cout << "Create Table" << std::endl;
+//        std::cerr << "Create Table" << std::endl;
         CreateTableQuery* q = static_cast<CreateTableQuery*>(query);
         if(meta->exist_table(q->tablename())) {
-            return new MessageDataReader("Table is already exist");
+            return new MessageDataReader("ERROR: Table is already exist");
         }
         uint32 tables_count = meta->get_tables_count();
         Table* t = new Table();
@@ -47,6 +47,7 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
             std::pair<std::string, DBDataType> cur = q->columns()[i];
             t->add_column(Column(cur.second, cur.first));
         }
+        //FIXME: а куда потом девается file? ТЕЧЁТ БЛЯТЬ!!!!
         IndexFile* file = new IndexFile(m_db->buffer(), tables_count, t->makeSignature());
         t->set_file(file);
         meta->add_table(t);
@@ -57,7 +58,7 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
         SelectQuery* q = static_cast<SelectQuery*>(query);
         std::string tablename = q->tablename();
         if(!meta->exist_table(tablename)) {
-            return new MessageDataReader("Table doesn't exist");
+            return new MessageDataReader("ERROR: Table doesn't exist");
         }
         uint32 index = meta->get_table_index(tablename);
         Table* t = meta->get_table(index);
@@ -69,7 +70,7 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
             std::pair< std::string, DBDataValue> cond = q->condition();
             uint32 column = signature->get_index(cond.first);
             if(column == -1) {
-                return new MessageDataReader("Field doesn't exist");
+                return new MessageDataReader("ERROR: Field doesn't exist");
             }
             return t->get_file()->select(column, cond.second);
         } else {
@@ -80,7 +81,7 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
         CreateIndexQuery* q = static_cast<CreateIndexQuery*>(query);
         std::string tablename = q->tablename();
         if(!meta->exist_table(tablename)) {
-            return new MessageDataReader("Table doesn't exist");
+            return new MessageDataReader("ERROR: Table doesn't exist");
         }
         uint32 index = meta->get_table_index(tablename);
         Table* t = meta->get_table(index);
@@ -90,7 +91,7 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
         Signature* signature = t->makeSignature();
         uint32 column = signature->get_index(q->cols().at(0).first);
         if(column == -1) {
-            return new MessageDataReader("Field doesn't exist");
+            return new MessageDataReader("ERROR: Field doesn't exist");
         }
         t->get_column(column).indextype = (IndexType)q->indextype();
         t->get_column(column).unique_index = q->is_unique();
@@ -100,7 +101,7 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
         InsertQuery* q = static_cast<InsertQuery*>(query);
         std::string tablename = q->tablename();
         if(!meta->exist_table(tablename)) {
-            return new MessageDataReader("Table doesn't exist");
+            return new MessageDataReader("ERROR: Table doesn't exist");
         }
         uint32 index = meta->get_table_index(tablename);
         Table* t = meta->get_table(index);
@@ -110,10 +111,10 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
             std::pair<std::string, DBDataValue> cur = q->values()[i];
             uint32 index = signature->get_index(cur.first);
             if(index == -1) {
-                return new MessageDataReader("Field doesn't exist");
+                return new MessageDataReader("ERROR: Field doesn't exist");
             }
             if(cur.second.type().get_type() != signature->get_field_type(index).get_type()) {
-                return new MessageDataReader("Data type error");
+                return new MessageDataReader("ERROR: Data type error");
             }
             switch(signature->get_field_type(index).get_type()) {
                 case 1:
@@ -171,13 +172,13 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
             ++cnt;
         }
         delete signature;
-        return new MessageDataReader("Affected rows: " + int_to_string(cnt));
+        return new MessageDataReader("OK Affected rows: " + int_to_string(cnt));
     } else if (query->type() == Query::Update) {
 //        std::cout << "Update" << std::endl;
         UpdateQuery* q = static_cast<UpdateQuery*>(query);
         std::string tablename = q->tablename();
         if(!meta->exist_table(tablename)) {
-            return new MessageDataReader("Table doesn't exist");
+            return new MessageDataReader("ERROR: Table doesn't exist");
         }
         uint32 index = meta->get_table_index(tablename);
         Table* t = meta->get_table(index);
@@ -204,7 +205,7 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
             for(uint32 i = 0; i < q->values().size(); ++i) {
                 uint32 column = signature->get_index(q->values()[i].first);
                 if(column == -1) {
-                    return new MessageDataReader("Field doesn't exist");
+                    return new MessageDataReader("ERROR: Field doesn't exist");
                 }
                 t->get_file()->update(column, position, record->get(column), q->values()[i].second);
                 record->set(column, q->values()[i].second);
@@ -215,7 +216,7 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
             ++cnt;
         }
         delete signature;
-        return new MessageDataReader("Affected rows: " + int_to_string(cnt));
+        return new MessageDataReader("OK Affected rows: " + int_to_string(cnt));
     }
     return 0;
 }

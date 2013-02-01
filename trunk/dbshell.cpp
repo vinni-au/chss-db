@@ -26,15 +26,17 @@ void DBShell::run() {
             delete q;
         if (reader) {
             Signature* signature = reader->getSignature();
-            for (int i = 0; i < signature->get_size(); ++i) {
-                if (i != 0)
-                    std::cout << ",";
-                DBDataType type = signature->get_field_type(i);
-                std::cout << signature->get_name(i) << "(";
-                std::cout << type.name();
-                std::cout << ")";
+            if (reader->type != 1) {
+                for (int i = 0; i < signature->get_size(); ++i) {
+                    if (i != 0)
+                        std::cout << ",";
+                    DBDataType type = signature->get_field_type(i);
+                    std::cout << signature->get_name(i) << "(";
+                    std::cout << type.name();
+                    std::cout << ")";
+                }
+                std::cout << std::endl;
             }
-            std::cout << std::endl;
             while (reader->hasNextRecord()) {
                 Record* current = reader->getNextRecord();
                 for (int i = 0; i < signature->get_size(); ++i) {
@@ -55,6 +57,7 @@ void DBShell::run() {
                 delete current;
                 std::cout << std::endl;
             }
+            std::cout << std::endl;
             delete reader;
         } else {
             if (parser.error().size() > 0)
