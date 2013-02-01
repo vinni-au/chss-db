@@ -10,6 +10,10 @@ Signature::Signature(std::vector<std::string> names, std::vector<DBDataType> typ
     }
 }
 
+Signature::~Signature() {
+    delete[] m_offsets;
+}
+
 DBDataType Signature::get_field_type(uint32 pos) const {
     return m_fields[pos];
 }
