@@ -152,7 +152,17 @@ struct DBDataValue {
     }
 
     bool operator == (const DBDataValue& value) const {
-        return (!(*this < value) && !(value < *this));
+        if(m_type.get_type() != value.m_type.get_type())
+            return false;
+        if(m_type.get_type() == DBDataType::INT) {
+            return m_int == value.m_int;
+        }
+        if(m_type.get_type() == DBDataType::DOUBLE) {
+            return m_double == value.m_double;
+        }
+        if(m_type.get_type() == DBDataType::VARCHAR) {
+            return m_string == value.m_string;
+        }
     }
 
     bool operator != (const DBDataValue& value) const {
@@ -184,7 +194,6 @@ struct IDataReader {
     virtual bool hasNextRecord() = 0;
     virtual Signature* getSignature() = 0;
     virtual Record* getNextRecord() = 0;
-    virtual ~IDataReader() {}
 };
 
 extern inline void postError(const char* who, const char* message);

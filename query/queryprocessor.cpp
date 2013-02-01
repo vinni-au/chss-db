@@ -61,7 +61,6 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
         }
         uint32 index = meta->get_table_index(tablename);
         Table* t = meta->get_table(index);
-        std::cout << "IndexType" << t->get_column(0).indextype << std::endl;
         Signature* signature = t->makeSignature();
         if(t->get_file() == 0) {
             t->set_file(new IndexFile(m_db->buffer(), index, t->makeSignature()));
@@ -77,7 +76,7 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
             return new FileIterator(t->get_file());
         }
     } else if(query->type() == Query::CreateIndex) {
-        std::cout << "CreateIndex" << std::endl;
+//        std::cout << "CreateIndex" << std::endl;
         CreateIndexQuery* q = static_cast<CreateIndexQuery*>(query);
         std::string tablename = q->tablename();
         if(!meta->exist_table(tablename)) {
@@ -89,15 +88,15 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
             t->set_file(new IndexFile(m_db->buffer(), index, t->makeSignature()));
         }
         Signature* signature = t->makeSignature();
-        uint32 column = signature->get_index(q->indexname());
+        uint32 column = signature->get_index(q->cols().at(0).first);
         if(column == -1) {
             return new MessageDataReader("Field doesn't exist");
         }
         t->get_column(column).indextype = (IndexType)q->indextype();
         t->get_column(column).unique_index = q->is_unique();
         t->get_file()->createIndex(column, (IndexType)q->indextype());
+        return new MessageDataReader("OK");
     } else if (query->type() == Query::Insert) {
-//        std::cout << "Insert" << std::endl;
         InsertQuery* q = static_cast<InsertQuery*>(query);
         std::string tablename = q->tablename();
         if(!meta->exist_table(tablename)) {
@@ -129,18 +128,18 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
             }
         }
         if(t->get_file() == 0) {
-            std::cout << "Creating" << std::endl;
             t->set_file(new IndexFile(m_db->buffer(), index, t->makeSignature()));
         }
         IndexFile* file = t->get_file();
         file->add(&record);
         delete signature;
+        return new MessageDataReader("OK");
     } else if (query->type() == Query::Delete) {
 //        std::cout << "Delete" << std::endl;
         DeleteQuery* q = static_cast<DeleteQuery*>(query);
         std::string tablename = q->tablename();
         if(!meta->exist_table(tablename)) {
-            return new MessageDataReader("Table doesn't exist");
+            return new MessageDataReader("Error: Table doesn't exist");
         }
         uint32 index = meta->get_table_index(tablename);
         Table* t = meta->get_table(index);
