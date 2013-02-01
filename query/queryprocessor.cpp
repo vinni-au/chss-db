@@ -72,6 +72,7 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
             if(column == -1) {
                 return new MessageDataReader("ERROR: Field doesn't exist");
             }
+            cond.second.type() = signature->get_field_type(column);
             return t->get_file()->select(column, cond.second);
         } else {
             return new FileIterator(t->get_file());
