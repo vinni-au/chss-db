@@ -22,6 +22,9 @@ BTreeVertex::BTreeVertex(BufferManager* _bm, uint32 _u, const std::string& _file
             data[i] = BTreeItem(value, DBDataValue(key));
         } else if(type.get_type() == DBDataType::VARCHAR) {
             std::string key(buffer + BTreeindex::HEADER_SIZE + itemsize * i + sizeof(uint32), buffer + BTreeindex::HEADER_SIZE + itemsize * i + sizeof(uint32) + type.get_size());
+            while(key.size() > 0 && key[key.size() - 1] == 0) {
+                key = key.substr(0, key.size() - 1);
+            }
             data[i] = BTreeItem(value, DBDataValue(key));
         }
 //        std::cout << data[i].value << ' ' << data[i].key.intValue() << std::endl;
@@ -136,7 +139,7 @@ void BTreeindex::createIndex() {
 }
 
 void BTreeindex::addKey(DBDataValue key, uint32 index) {
-//    std::cout << "addKey" << key.intValue() << ' ' << index << std::endl;
+//    std::cout << "addKey" << index << std::endl;
     BTreeItem item(index, key);
 
     BTreeVertex* start = new BTreeVertex(m_bm, 0, m_index_filename, type);
@@ -148,8 +151,6 @@ void BTreeindex::addKey(DBDataValue key, uint32 index) {
     delete vroot;
 
     if(current_size == BTreeVertex::get_capacity(type)) {
-//        std::cout << "FULL" << std::endl;
-
         BTreeVertex* start = new BTreeVertex(m_bm, 0, m_index_filename, type);
         uint32 s = start->total++;
         start->root = s;
@@ -170,7 +171,6 @@ void BTreeindex::addKey(DBDataValue key, uint32 index) {
 }
 
 BTreeIterator* BTreeindex::findKey(DBDataValue key) {
-    std::cout << "BtreeIndex" << std::endl;
     BTreeVertex* start = new BTreeVertex(m_bm, 0, m_index_filename, type);
     uint32 root = start->root;
     delete start;
