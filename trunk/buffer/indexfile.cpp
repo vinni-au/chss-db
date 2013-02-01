@@ -47,6 +47,14 @@ Signature* IndexFile::get_file_signature() const {
     return m_signature;
 }
 
+void IndexFile::pop_back() {
+    uint32 size = get_size();
+    if(size) {
+        --size;
+        m_bm->write(m_table_filename, 0, (char*)(&size), TABLE_HEADER_SIZE);
+    }
+}
+
 void IndexFile::add(Record* r) {
     uint32 size = get_size();
     m_bm->write(m_table_filename, TABLE_HEADER_SIZE + m_record_size * size, r->get_data_pointer(), m_record_size);

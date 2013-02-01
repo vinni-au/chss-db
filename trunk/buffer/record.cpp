@@ -1,5 +1,6 @@
 #include "record.h"
 #include <cstring>
+#include <algorithm>
 
 Record::Record(uint32 position, Signature* signature) : m_position(position), m_signature(signature), m_data(new char[signature->get_size_in_bytes()]) {
     memset(m_data, 0, signature->get_size_in_bytes());}
@@ -24,7 +25,11 @@ void Record::setDouble(uint32 pos, double value) {
 
 void Record::setVarchar(uint32 pos, std::string value) {
     uint32 offset = m_signature->get_offset(pos);
-    memcpy(m_data + offset, value.c_str(), value.size());
+    uint32 size = std::min((int)value.size(), m_signature->get_field_type(pos).get_size());
+    memcpy(m_data + offset, value.c_str(), size);
+    for(uint32 i = size; i < m_signature->get_field_type(pos).get_size(); ++i) {
+        m_data[i] = 0;
+    }
 }
 
 void Record::set(uint32 pos, DBDataValue value) {

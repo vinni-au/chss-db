@@ -36,6 +36,7 @@ void Noindex::addKey(DBDataValue key, uint32 page) {
 }
 
 NoindexIterator* Noindex::findKey(DBDataValue key) {
+//    std::cout << "NoIndex" << std::endl;
     return new NoindexIterator(this, key);
 }
 

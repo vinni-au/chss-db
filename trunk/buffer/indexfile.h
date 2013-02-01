@@ -16,6 +16,7 @@ public:
     uint32 get_size() const;
     Signature* get_file_signature() const;
     Record* get(uint32 index) const;
+    void pop_back();
     void set(uint32 index, Record* record) const;
     void add(Record* r);
     void createIndex(uint32 column, IndexType type);
