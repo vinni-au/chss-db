@@ -28,7 +28,7 @@ void Record::setVarchar(uint32 pos, std::string value) {
     uint32 size = std::min((int)value.size(), m_signature->get_field_type(pos).get_size());
     memcpy(m_data + offset, value.c_str(), size);
     for(uint32 i = size; i < m_signature->get_field_type(pos).get_size(); ++i) {
-        m_data[i] = 0;
+        m_data[offset + i] = 0;
     }
 }
 
