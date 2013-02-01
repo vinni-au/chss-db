@@ -52,6 +52,7 @@ void DBShell::run() {
                         break;
                     }
                 }
+                delete current;
                 std::cout << std::endl;
             }
             delete reader;
