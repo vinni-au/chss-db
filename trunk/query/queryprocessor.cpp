@@ -47,7 +47,6 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
             std::pair<std::string, DBDataType> cur = q->columns()[i];
             t->add_column(Column(cur.second, cur.first));
         }
-        //FIXME: а куда потом девается file? ТЕЧЁТ БЛЯТЬ!!!!
         IndexFile* file = new IndexFile(m_db->buffer(), tables_count, t->makeSignature());
         t->set_file(file);
         meta->add_table(t);

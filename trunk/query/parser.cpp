@@ -413,7 +413,7 @@ Query* Parser::p_create() {
             result->m_indextype = TREEINDEX;
         } else if (symbol == Lex_hash) {
             accept(Lex_hash);
-            result->m_indextype = HASHINDEX;
+            result->m_indextype = TREEINDEX;//HASHINDEX;
         }
         result->m_unique = needUnique;
 

@@ -126,7 +126,6 @@ public:
             types.push_back(m_columns[i].get_type());
             indextypes.push_back(std::make_pair(m_columns[i].indextype, m_columns[i].unique_index));
         }
-        //FIXME: тут тоже ТЕЧЁТ!!!
         return new Signature(names, types, indextypes);
     }
 };
