@@ -10,6 +10,7 @@ BTreeVertex::BTreeVertex(BufferManager* _bm, uint32 _u, const std::string& _file
     isleaf = *(bool*)(buffer + 3 * sizeof(uint32));
     uint32 capacity = get_capacity(type);
     uint32 itemsize = sizeof(uint32) + type.get_size();
+//    std::cout << "Itemsize " << file << " " << itemsize << std::endl;
     data = new BTreeItem[capacity];
     size = std::min(size, capacity);
     for(uint32 i = 0; i < size; ++i) {
@@ -82,7 +83,7 @@ bool BTreeIterator::hasNextRecord() {
             if(cur.isleaf) {
 //                std::cout << "Leaf (" << current_position << ", " << cur.size << ")" << std::endl;
                 while(current_position < cur.size && cur.data[current_position].key != m_key) {
-//                    std::cout << "> " << cur.data[current_position].key.stringValue() << ' ' << m_key.stringValue() << std::endl;
+//                    std::cout << "> '" << cur.data[current_position].key.stringValue() << "' '" << m_key.stringValue() << "'" << std::endl;
                     ++current_position;
                 }
                 if(current_position < cur.size) {
@@ -93,6 +94,7 @@ bool BTreeIterator::hasNextRecord() {
             } else {
 //                std::cout << "Go (" << current_position << ", " << cur.size << ") " << std::endl;
                 while(current_position < cur.size) {
+//                    std::cout << cur.data[current_position].key.stringValue() << ' ' << m_key.stringValue() << std::endl;
                     if((current_position == 0 || cur.data[current_position - 1].key <= m_key) && (m_key <= cur.data[current_position].key || current_position == cur.size - 1)) {
                         ++current_position;
                         path.push_back(std::make_pair(cur.data[current_position - 1].value, 0));
@@ -176,6 +178,7 @@ void BTreeindex::addKey(DBDataValue key, uint32 index) {
 
 BTreeIterator* BTreeindex::findKey(DBDataValue key) {
     BTreeVertex* start = new BTreeVertex(m_bm, 0, m_index_filename, type);
+//    std::cout << "Keysize" << key.type().get_size() << std::endl;
     uint32 root = start->root;
     delete start;
     return new BTreeIterator(this, key, root);

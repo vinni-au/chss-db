@@ -133,6 +133,10 @@ struct DBDataValue {
     DBDataType const &type() const
     {   return m_type;  }
 
+
+    DBDataType &type()
+    {   return m_type;  }
+
     bool operator < (const DBDataValue& value) const {
         if(m_type.get_type() != value.m_type.get_type())
             return false;
