@@ -2,6 +2,7 @@
 #include "query/parser.hpp"
 #include "buffer/record.h"
 #include <stdarg.h>
+#include "messagedatareader.hpp"
 
 DBShell::DBShell(DB *db) :
     m_db(db)
@@ -57,6 +58,7 @@ void DBShell::run() {
                 delete current;
                 std::cout << std::endl;
             }
+            delete signature;
             std::cout << std::endl;
             delete reader;
         } else {

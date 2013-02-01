@@ -13,6 +13,7 @@ enum IndexType {
 
 struct Signature {
     Signature(std::vector<std::string> names, std::vector<DBDataType> types, std::vector<std::pair<IndexType, bool> > indextypes);
+    ~Signature();
     DBDataType get_field_type(uint32 pos) const;
     std::string const& get_name(uint32 pos) const;
     IndexType get_index_type(uint32 pos) const {
