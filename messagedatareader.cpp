@@ -22,3 +22,7 @@ Record* MessageDataReader::getNextRecord() {
 
     return 0;
 }
+
+MessageDataReader::~MessageDataReader() {
+    delete m_sig;
+}

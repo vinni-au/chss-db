@@ -24,6 +24,8 @@ public:
 
     Record* getNextRecord();
 
+    ~MessageDataReader();
+
 private:
     bool m_hasNext;
     Signature* m_sig;
