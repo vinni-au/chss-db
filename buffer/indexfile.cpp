@@ -95,6 +95,11 @@ void IndexFile::update(uint32 column, uint32 position, DBDataValue oldkey, DBDat
     indexes[column]->addKey(newkey, position);
 }
 
+void IndexFile::update_position(uint32 column, uint32 oldposition, uint32 newposition, DBDataValue key) {
+    indexes[column]->deleteKey(key, oldposition);
+    indexes[column]->addKey(key, newposition);
+}
+
 void IndexFile::remove(uint32 column, uint32 position, DBDataValue key) {
     indexes[column]->deleteKey(key, position);
 }

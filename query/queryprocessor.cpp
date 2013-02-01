@@ -161,6 +161,9 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
             uint32 filesize = t->get_file()->get_size();
             Record* tail = t->get_file()->get(filesize - 1);
             t->get_file()->set(position, tail);
+            for(uint32 i = 0; i < signature->get_size(); ++i) {
+                t->get_file()->update_position(i, filesize - 1, position, tail->get(i));
+            }
             delete tail;
 
             delete data;

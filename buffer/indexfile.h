@@ -22,6 +22,7 @@ public:
     void createIndex(uint32 column, IndexType type);
     IndexIterator* select(uint32 column, DBDataValue key);
     void update(uint32 column, uint32 position, DBDataValue oldkey, DBDataValue newkey);
+    void update_position(uint32 column, uint32 oldposition, uint32 newposition, DBDataValue key);
     void remove(uint32 column, uint32 position, DBDataValue key);
     static uint32 const TABLE_HEADER_SIZE = sizeof(uint32);
 private:
