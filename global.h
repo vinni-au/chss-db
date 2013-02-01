@@ -118,7 +118,7 @@ struct DBDataValue {
 
     explicit DBDataValue(std::string value) :
         m_string(value),
-        m_type(DBDataType(DBDataType::VARCHAR, value.length()))
+        m_type(DBDataType(DBDataType::VARCHAR, value.size()))
     {   }
 
     int intValue() const

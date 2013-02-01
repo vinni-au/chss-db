@@ -58,7 +58,6 @@ void DBShell::run() {
                 delete current;
                 std::cout << std::endl;
             }
-            delete signature;
             std::cout << std::endl;
             delete reader;
         } else {

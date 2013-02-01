@@ -52,7 +52,11 @@ BTreeVertex::~BTreeVertex() {
         } else if(m_type.get_type() == DBDataType::DOUBLE) {
             *(double*)(buffer + BTreeindex::HEADER_SIZE + itemsize * i + sizeof(uint32)) = data[i].key.doubleValue();
         } else if(m_type.get_type() == DBDataType::VARCHAR) {
-            memcpy(buffer + BTreeindex::HEADER_SIZE + itemsize * i + sizeof(uint32), data[i].key.stringValue().c_str(), m_type.get_size());
+            uint32 towrite = std::min((int)data[i].key.stringValue().size(), m_type.get_size());
+            memcpy(buffer + BTreeindex::HEADER_SIZE + itemsize * i + sizeof(uint32), data[i].key.stringValue().c_str(), data[i].key.stringValue().size());
+            for(uint32 j = towrite; j < m_type.get_size(); ++j) {
+                buffer[BTreeindex::HEADER_SIZE + itemsize * i + sizeof(uint32) + j] = 0;
+            }
         }
     }
     bm->write(file, PAGESIZE * u, buffer, PAGESIZE);
@@ -78,7 +82,7 @@ bool BTreeIterator::hasNextRecord() {
             if(cur.isleaf) {
 //                std::cout << "Leaf (" << current_position << ", " << cur.size << ")" << std::endl;
                 while(current_position < cur.size && cur.data[current_position].key != m_key) {
-//                    std::cout << "> " << cur.data[current_position].key.intValue() << ' ' << m_key.intValue() << std::endl;
+//                    std::cout << "> " << cur.data[current_position].key.stringValue() << ' ' << m_key.stringValue() << std::endl;
                     ++current_position;
                 }
                 if(current_position < cur.size) {
