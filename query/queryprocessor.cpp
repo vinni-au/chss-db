@@ -47,6 +47,7 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
             std::pair<std::string, DBDataType> cur = q->columns()[i];
             t->add_column(Column(cur.second, cur.first));
         }
+        //FIXME: а куда потом девается file? ТЕЧЁТ БЛЯТЬ!!!!
         IndexFile* file = new IndexFile(m_db->buffer(), tables_count, t->makeSignature());
         t->set_file(file);
         meta->add_table(t);
@@ -135,7 +136,6 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
         delete signature;
         return new MessageDataReader("OK");
     } else if (query->type() == Query::Delete) {
-//        std::cout << "Delete" << std::endl;
         DeleteQuery* q = static_cast<DeleteQuery*>(query);
         std::string tablename = q->tablename();
         if(!meta->exist_table(tablename)) {
@@ -151,7 +151,7 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
         std::pair< std::string, DBDataValue> cond = q->condition();
         while(true) {
             IDataReader* data;
-            if(cond.first.empty()) {
+            if(!cond.first.empty()) {
                 uint32 column = signature->get_index(cond.first);
                 data = t->get_file()->select(column, cond.second);
             } else {
@@ -167,7 +167,14 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
                 t->get_file()->remove(i, position, record->get(i));
             }
             delete record;
+
+            uint32 filesize = t->get_file()->get_size();
+            Record* tail = t->get_file()->get(filesize - 1);
+            t->get_file()->set(position, tail);
+            delete tail;
+
             delete data;
+            t->get_file()->pop_back();
             ++cnt;
         }
         delete signature;
@@ -186,14 +193,20 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
             t->set_file(new IndexFile(m_db->buffer(), index, t->makeSignature()));
         }
         uint32 cnt = 0;
+        IDataReader* data = 0;
         while(true) {
-            IDataReader* data;
-            if(!q->condition().first.empty()) {
-                std::pair< std::string, DBDataValue> cond = q->condition();
-                uint32 column = signature->get_index(cond.first);
-                data = t->get_file()->select(column, cond.second);
-            } else {
-                data = new FileIterator(t->get_file());
+            uint32 column = -1;
+            if(!data) {
+                if(!q->condition().first.empty()) {
+                    std::pair< std::string, DBDataValue> cond = q->condition();
+                    column = signature->get_index(cond.first);
+                    if(column == -1) {
+                        return new MessageDataReader("ERROR: Field doesn't exist");
+                    }
+                    data = t->get_file()->select(column, cond.second);
+                } else {
+                    data = new FileIterator(t->get_file());
+                }
             }
             if(!data->hasNextRecord()) {
                 delete data;
@@ -202,16 +215,19 @@ IDataReader* QueryProcessor::runQuery(Query *query) {
             Record* record = data->getNextRecord();
             uint32 position = record->getPosition();
             for(uint32 i = 0; i < q->values().size(); ++i) {
-                uint32 column = signature->get_index(q->values()[i].first);
-                if(column == -1) {
+                uint32 curcolumn = signature->get_index(q->values()[i].first);
+                if(curcolumn == -1) {
                     return new MessageDataReader("ERROR: Field doesn't exist");
                 }
-                t->get_file()->update(column, position, record->get(column), q->values()[i].second);
-                record->set(column, q->values()[i].second);
+                t->get_file()->update(curcolumn, position, record->get(curcolumn), q->values()[i].second);
+                record->set(curcolumn, q->values()[i].second);
+                if(curcolumn == column) {
+                    delete data;
+                    data = 0;
+                }
             }
             t->get_file()->set(position, record);
             delete record;
-            delete data;
             ++cnt;
         }
         delete signature;
